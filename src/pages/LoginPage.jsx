@@ -23,7 +23,10 @@ export default function LoginPage() {
     }
 
     try {
-      await authService.login(formData);
+      await authService.login({
+        identifier: formData.email,
+        password: formData.password
+      });
       // alert("Login successful!"); // Optional: Remove for smoother UX
       navigate("/dashboard");
     } catch (error) {

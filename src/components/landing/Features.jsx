@@ -1,6 +1,26 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const Features = () => {
+    const [isVisible, setIsVisible] = useState(false);
+    const sectionRef = useRef(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                }
+            },
+            { threshold: 0.2 }
+        );
+
+        if (sectionRef.current) {
+            observer.observe(sectionRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
     const features = [
         {
             icon: "leak_add",
@@ -20,16 +40,21 @@ const Features = () => {
     ];
 
     return (
-        <section className="w-full flex justify-center py-10 px-10" id="features">
+        <section ref={sectionRef} className="w-full flex justify-center py-10 px-10" id="features">
             <div className="w-full max-w-[1200px]">
-                <div className="flex flex-col gap-1 mb-6">
+                <div className={`flex flex-col gap-1 mb-6 ${isVisible ? 'animate-fade-in-up' : 'opacity-0'}`}>
                     <h2 className="text-[#131613] text-xl font-bold leading-tight tracking-tight">Our Key Features</h2>
                     <p className="text-gray-500 text-sm">Everything you need to manage your farm efficiently.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
                     {features.map((feature, index) => (
-                        <div key={index} className="flex flex-col gap-3 rounded-lg border border-[#e5e7e5] bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <div
+                            key={index}
+                            className={`flex flex-col gap-3 rounded-lg border border-[#e5e7e5] bg-white p-5 shadow-sm card-interactive ${isVisible ? 'animate-fade-in-up' : 'opacity-0'
+                                }`}
+                            style={{ animationDelay: `${(index + 1) * 150}ms` }}
+                        >
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary icon-hover">
                                 <span className="material-symbols-outlined text-xl">{feature.icon}</span>
                             </div>
                             <div className="flex flex-col gap-1">

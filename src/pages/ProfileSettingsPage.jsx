@@ -53,11 +53,11 @@ export default function ProfileSettingsPage() {
             </div>
 
             {/* Main Content */}
-            <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6">
+            <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6 animate-fade-in-up">
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Left Sidebar */}
-                    <div className="lg:w-64 flex-shrink-0">
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="lg:w-64 flex-shrink-0 animate-fade-in-left delay-100">
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden sticky top-20">
                             {/* Profile Header */}
                             <div className="p-4 border-b border-gray-100">
                                 <div className="flex items-center gap-3">
@@ -125,8 +125,8 @@ export default function ProfileSettingsPage() {
                     </div>
 
                     {/* Right Content */}
-                    <div className="flex-1">
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+                    <div className="flex-1 animate-fade-in-right delay-200">
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-md">
                             {/* Content Header */}
                             <div className="flex items-center justify-between p-5 border-b border-gray-100">
                                 <div>
@@ -137,7 +137,7 @@ export default function ProfileSettingsPage() {
                                     <button className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
                                         Cancel
                                     </button>
-                                    <button className="px-4 py-2 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors">
+                                    <button className="px-4 py-2 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm hover:shadow hover:-translate-y-0.5">
                                         Save Changes
                                     </button>
                                 </div>
@@ -146,7 +146,7 @@ export default function ProfileSettingsPage() {
                             {/* Form Content */}
                             <div className="p-5 space-y-6">
                                 {/* Personal Details */}
-                                <div>
+                                <div className="animate-fade-in-up delay-300">
                                     <div className="flex items-center gap-2 mb-4">
                                         <span className="material-symbols-outlined text-primary text-base">badge</span>
                                         <span className="text-sm font-semibold text-[#131613]">Personal Details</span>
@@ -160,7 +160,7 @@ export default function ProfileSettingsPage() {
                                                 type="text"
                                                 value={formData.fullName}
                                                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary"
+                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary transition-colors"
                                             />
                                         </div>
 
@@ -171,7 +171,7 @@ export default function ProfileSettingsPage() {
                                                 type="email"
                                                 value={formData.email}
                                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary"
+                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary transition-colors"
                                             />
                                         </div>
 
@@ -184,7 +184,7 @@ export default function ProfileSettingsPage() {
                                                     type="tel"
                                                     value={formData.phone}
                                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                                    className="flex-1 h-10 px-3 rounded-r-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary"
+                                                    className="flex-1 h-10 px-3 rounded-r-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary transition-colors"
                                                 />
                                             </div>
                                         </div>
@@ -195,7 +195,7 @@ export default function ProfileSettingsPage() {
                                             <select
                                                 value={formData.language}
                                                 onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white"
+                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
                                             >
                                                 <option value="Sinhala">Sinhala</option>
                                                 <option value="Tamil">Tamil</option>
@@ -206,7 +206,7 @@ export default function ProfileSettingsPage() {
                                 </div>
 
                                 {/* Agricultural Context */}
-                                <div className="pt-4 border-t border-gray-100">
+                                <div className="pt-4 border-t border-gray-100 animate-fade-in-up delay-500">
                                     <div className="flex items-center gap-2 mb-4">
                                         <span className="material-symbols-outlined text-primary text-base">trending_up</span>
                                         <span className="text-sm font-semibold text-[#131613]">Agricultural Context</span>
@@ -219,7 +219,7 @@ export default function ProfileSettingsPage() {
                                             <select
                                                 value={formData.district}
                                                 onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white"
+                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
                                             >
                                                 {districts.map(d => (
                                                     <option key={d} value={d}>{d}</option>
@@ -234,7 +234,7 @@ export default function ProfileSettingsPage() {
                                             <select
                                                 value={formData.primaryCrop}
                                                 onChange={(e) => setFormData({ ...formData, primaryCrop: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white"
+                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
                                             >
                                                 <option value="Paddy (Rice)">Paddy (Rice)</option>
                                                 <option value="Vegetables">Vegetables</option>
@@ -257,13 +257,13 @@ export default function ProfileSettingsPage() {
                                                 <button
                                                     key={crop.name}
                                                     onClick={() => toggleSecondaryCrop(crop.name)}
-                                                    className={`relative p-4 rounded-xl border-2 transition-all ${selectedSecondaryCrops.includes(crop.name)
+                                                    className={`relative p-4 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${selectedSecondaryCrops.includes(crop.name)
                                                         ? "border-primary bg-primary/5"
                                                         : "border-gray-200 hover:border-gray-300"
                                                         }`}
                                                 >
                                                     {selectedSecondaryCrops.includes(crop.name) && (
-                                                        <span className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                                                        <span className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center animate-scale-in">
                                                             <span className="material-symbols-outlined text-white text-xs">check</span>
                                                         </span>
                                                     )}
@@ -277,13 +277,13 @@ export default function ProfileSettingsPage() {
                                 </div>
 
                                 {/* Security */}
-                                <div className="pt-4 border-t border-gray-100">
+                                <div className="pt-4 border-t border-gray-100 animate-fade-in-up delay-700">
                                     <div className="flex items-center gap-2 mb-4">
                                         <span className="material-symbols-outlined text-primary text-base">shield</span>
                                         <span className="text-sm font-semibold text-[#131613]">Security</span>
                                     </div>
 
-                                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-colors hover:bg-gray-100">
                                         <div>
                                             <p className="text-xs font-medium text-[#131613]">Password</p>
                                             <p className="text-[10px] text-gray-400">Last changed 3 months ago</p>

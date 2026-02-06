@@ -3,7 +3,10 @@ import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 
+import authService from "../services/authService";
+
 export default function WeatherPage() {
+    const user = authService.getCurrentUser();
     const forecast = [
         { day: "Today", icon: "sunny", high: 24, low: 18 },
         { day: "Wed", icon: "rainy", high: 22, low: 17 },
@@ -46,7 +49,7 @@ export default function WeatherPage() {
 
                             <div className="animate-fade-in-up delay-200">
                                 <p className="text-white/80 text-xs mb-4 max-w-md">
-                                    Current conditions in Nuwara Eliya. Moderate winds from the NW. Ideal conditions for afternoon tea plucking.
+                                    Current conditions in {user ? user.district : "Sri Lanka"}. Moderate winds from the NW. Ideal conditions for afternoon tea plucking.
                                 </p>
                                 <div className="flex gap-2">
                                     <button className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">

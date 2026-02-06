@@ -3,7 +3,12 @@ import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 
+import authService from "../services/authService";
+
 export default function CropGuidePage() {
+    const user = authService.getCurrentUser();
+    const cropName = user && user.crop ? user.crop : "Paddy / Rice";
+
     const growthStages = [
         { name: "Seedling", days: "Day 0-14", status: "completed" },
         { name: "Vegetative", days: "Day 15-55 (Current)", status: "active" },
@@ -27,8 +32,8 @@ export default function CropGuidePage() {
                 {/* Page Header */}
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6 animate-fade-in-down">
                     <div>
-                        <h1 className="text-2xl font-bold text-[#131613]">Crop Guide: Paddy / Rice</h1>
-                        <p className="text-gray-500 text-sm mt-1">Recommended fertilizer and growth schedule for Red Rice in the Dry Zone.</p>
+                        <h1 className="text-2xl font-bold text-[#131613]">Crop Guide: {cropName}</h1>
+                        <p className="text-gray-500 text-sm mt-1">Recommended fertilizer and growth schedule for {cropName} in the Dry Zone.</p>
                         <div className="flex items-center gap-1.5 mt-2">
                             <span className="material-symbols-outlined text-orange-400 text-sm animate-spin-slow">sunny</span>
                             <span className="text-orange-500 text-xs font-medium">Dry Season</span>

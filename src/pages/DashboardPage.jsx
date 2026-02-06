@@ -25,7 +25,7 @@ export default function DashboardPage() {
           <div className="flex gap-2 mt-3 md:mt-0 animate-fade-in-right delay-100">
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
               <span className="material-symbols-outlined text-sm text-gray-500">location_on</span>
-              Polonnaruwa
+              {user ? user.district : "Polonnaruwa"}
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
               <span className="material-symbols-outlined text-sm text-amber-500">star</span>

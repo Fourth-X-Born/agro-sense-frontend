@@ -1,18 +1,16 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import DashboardNavbar from "../components/dashboard/DashboardNavbar";
-import DashboardFooter from "../components/dashboard/DashboardFooter";
+import authService from "../services/authService";
 
 export default function ProfileSettingsPage() {
     const navigate = useNavigate();
+    const user = authService.getCurrentUser();
     const [activeTab, setActiveTab] = useState("profile");
     const [formData, setFormData] = useState({
-        fullName: "Ruwan Perera",
-        email: "ruwan.p@example.com",
-        phone: "77 123 4567",
-        language: "Sinhala",
-        district: "Polonnaruwa",
-        primaryCrop: "Paddy (Rice)"
+        fullName: user ? user.name : "Ruwan Perera",
+        email: user ? user.email : "ruwan.p@example.com",
+        phone: user && user.phone ? user.phone : "77 123 4567",
+        language: "English",
+        district: user ? user.district : "Polonnaruwa",
+        primaryCrop: user && user.crop ? user.crop : "Paddy (Rice)"
     });
     const [selectedSecondaryCrops, setSelectedSecondaryCrops] = useState(["Vegetables"]);
 
@@ -69,7 +67,7 @@ export default function ProfileSettingsPage() {
                                         />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-[#131613]">Ruwan Perera</p>
+                                        <p className="text-sm font-semibold text-[#131613]">{user ? user.name : "Ruwan Perera"}</p>
                                         <span className="text-[10px] text-primary font-medium">Pro Plan</span>
                                     </div>
                                 </div>

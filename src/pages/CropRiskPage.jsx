@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 
+import authService from "../services/authService";
+
 export default function CropRiskPage() {
-    const [selectedDistrict, setSelectedDistrict] = useState("Polonnaruwa");
-    const [selectedCrop, setSelectedCrop] = useState("Paddy (Rice)");
+    const user = authService.getCurrentUser();
+    const [selectedDistrict, setSelectedDistrict] = useState(user ? user.district : "Polonnaruwa");
+    const [selectedCrop, setSelectedCrop] = useState(user && user.crop ? user.crop : "Paddy (Rice)");
     const [selectedGrowthStage, setSelectedGrowthStage] = useState("Vegetative Phase");
 
     const districts = [
@@ -30,7 +33,7 @@ export default function CropRiskPage() {
                 <div className="mb-6 animate-fade-in-left">
                     <h1 className="text-xl font-bold text-[#131613]">AI Crop Risk Assessment</h1>
                     <p className="text-gray-500 text-xs">
-                        Real-time intelligence for <span className="text-primary font-medium">Polonnaruwa District</span> • Paddy Cultivation
+                        Real-time intelligence for <span className="text-primary font-medium">{selectedDistrict} District</span> • Paddy Cultivation
                     </p>
                 </div>
 
@@ -236,7 +239,7 @@ export default function CropRiskPage() {
                         {/* Regional Satellite View */}
                         <div className="animate-fade-in-up delay-700">
                             <p className="text-[10px] text-gray-400 mb-1">Regional Satellite View</p>
-                            <h3 className="font-semibold text-sm text-primary mb-3">Polonnaruwa Agricultural Zone B</h3>
+                            <h3 className="font-semibold text-sm text-primary mb-3">{selectedDistrict} Agricultural Zone B</h3>
                             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden h-64 hover:shadow-md transition-shadow">
                                 <iframe
                                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126743.58585959864!2d81.00022565!3d7.9403022!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3afb456e05e5af8f%3A0x8f4e5a9b5e8f1c0!2sPolonnaruwa!5e0!3m2!1sen!2slk!4v1234567890"

@@ -2,8 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
+import authService from "../services/authService";
 
 export default function DashboardPage() {
+  const user = authService.getCurrentUser();
+
   return (
     <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
       {/* Dashboard Navbar */}
@@ -14,7 +17,7 @@ export default function DashboardPage() {
         {/* Greeting Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="animate-fade-in-left">
-            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, Sunil!</h1>
+            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, {user ? user.name : "Farmer"}!</h1>
             <p className="text-gray-500 text-sm">
               Here is your farming overview for today, <span className="text-primary font-medium">Tuesday, 24 Oct.</span>
             </p>

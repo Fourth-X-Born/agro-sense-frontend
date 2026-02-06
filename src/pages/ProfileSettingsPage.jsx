@@ -245,11 +245,10 @@ export default function ProfileSettingsPage() {
                                                 onChange={(e) => setFormData({ ...formData, primaryCrop: e.target.value })}
                                                 className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
                                             >
-                                                <option value="Paddy (Rice)">Paddy (Rice)</option>
-                                                <option value="Vegetables">Vegetables</option>
-                                                <option value="Tea">Tea</option>
-                                                <option value="Coconut">Coconut</option>
-                                                <option value="Rubber">Rubber</option>
+                                                <option value="">Select Primary Crop</option>
+                                                {crops.map(crop => (
+                                                    <option key={crop.id} value={crop.name}>{crop.name}</option>
+                                                ))}
                                             </select>
                                             <p className="text-[9px] text-primary mt-1 flex items-center gap-0.5">
                                                 <span className="material-symbols-outlined text-xs">info</span>
@@ -262,9 +261,9 @@ export default function ProfileSettingsPage() {
                                     <div>
                                         <label className="text-[10px] font-medium text-gray-500 block mb-2">Secondary Crops (Select up to 3)</label>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                            {secondaryCropOptions.map((crop) => (
+                                            {crops.map((crop) => (
                                                 <button
-                                                    key={crop.name}
+                                                    key={crop.id}
                                                     onClick={() => toggleSecondaryCrop(crop.name)}
                                                     className={`relative p-4 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${selectedSecondaryCrops.includes(crop.name)
                                                         ? "border-primary bg-primary/5"
@@ -277,7 +276,7 @@ export default function ProfileSettingsPage() {
                                                         </span>
                                                     )}
                                                     <span className={`material-symbols-outlined text-2xl mb-2 ${selectedSecondaryCrops.includes(crop.name) ? "text-primary" : "text-gray-400"
-                                                        }`}>{crop.icon}</span>
+                                                        }`}>eco</span>
                                                     <p className="text-xs font-medium text-[#131613]">{crop.name}</p>
                                                 </button>
                                             ))}

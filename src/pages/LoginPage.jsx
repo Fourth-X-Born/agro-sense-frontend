@@ -148,7 +148,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <div className="text-center py-2 text-[8px] text-gray-400">
-        © 2026 AgroSense AI. All rights reserved.
+        © 2026 <span className="font-semibold"><span className="text-gray-500">Agro</span><span className="text-primary">Sense</span> AI</span>. All rights reserved.
       </div>
     </div>
   );

@@ -23,33 +23,33 @@ export default function CropGuidePage() {
             <DashboardNavbar />
 
             {/* Main Content */}
-            <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6">
+            <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6 animate-fade-in-up">
                 {/* Page Header */}
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6 animate-fade-in-down">
                     <div>
                         <h1 className="text-2xl font-bold text-[#131613]">Crop Guide: Paddy / Rice</h1>
                         <p className="text-gray-500 text-sm mt-1">Recommended fertilizer and growth schedule for Red Rice in the Dry Zone.</p>
                         <div className="flex items-center gap-1.5 mt-2">
-                            <span className="material-symbols-outlined text-orange-400 text-sm">sunny</span>
+                            <span className="material-symbols-outlined text-orange-400 text-sm animate-spin-slow">sunny</span>
                             <span className="text-orange-500 text-xs font-medium">Dry Season</span>
                         </div>
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg text-xs font-medium text-[#131613] hover:bg-gray-50 transition-colors">
+                    <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg text-xs font-medium text-[#131613] hover:bg-gray-50 transition-colors hover:shadow-sm">
                         <span className="material-symbols-outlined text-base">download</span>
                         Download PDF
                     </button>
                 </div>
 
                 {/* Growth Stage Timeline */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6 animate-scale-in delay-100 hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between relative">
                         {/* Connection Lines */}
                         <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 z-0"></div>
                         <div className="absolute top-4 left-0 w-1/4 h-0.5 bg-primary z-0"></div>
 
                         {growthStages.map((stage, index) => (
-                            <div key={index} className="flex flex-col items-center relative z-10">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${stage.status === "active" ? "bg-primary" :
+                            <div key={index} className="flex flex-col items-center relative z-10" style={{ animationDelay: `${index * 150}ms` }}>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${stage.status === "active" ? "bg-primary scale-110 shadow-md ring-4 ring-primary/20" :
                                     stage.status === "completed" ? "bg-primary" :
                                         "bg-gray-200"
                                     }`}>
@@ -57,7 +57,7 @@ export default function CropGuidePage() {
                                         <span className="material-symbols-outlined text-white text-sm">check</span>
                                     )}
                                 </div>
-                                <p className={`text-xs font-medium mt-2 ${stage.status === "active" ? "text-primary" :
+                                <p className={`text-xs font-medium mt-2 transition-colors ${stage.status === "active" ? "text-primary font-bold" :
                                     stage.status === "completed" ? "text-primary" :
                                         "text-gray-400"
                                     }`}>{stage.name}</p>
@@ -68,8 +68,8 @@ export default function CropGuidePage() {
                 </div>
 
                 {/* Info Alert */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-                    <span className="material-symbols-outlined text-blue-500 text-lg">info</span>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3 animate-fade-in delay-200 hover:shadow-sm transition-shadow">
+                    <span className="material-symbols-outlined text-blue-500 text-lg animate-pulse">info</span>
                     <div>
                         <h4 className="text-sm font-semibold text-blue-800">Approaching Maximum Tillering</h4>
                         <p className="text-xs text-blue-700 leading-relaxed">
@@ -81,15 +81,15 @@ export default function CropGuidePage() {
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column - Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-6 animate-fade-in-up delay-300">
                         {/* Stage Guidelines */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <h3 className="text-sm font-bold text-[#131613]">Stage 2: Vegetative Growth Guidelines</h3>
                                     <p className="text-[10px] text-gray-400">Focus: Leaf development & Root strengthening</p>
                                 </div>
-                                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full">ACTIVE</span>
+                                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full animate-pulse-subtle">ACTIVE</span>
                             </div>
 
                             {/* Fertilizer Application */}
@@ -111,7 +111,7 @@ export default function CropGuidePage() {
                                         </thead>
                                         <tbody>
                                             {fertilizerData.map((row, index) => (
-                                                <tr key={index} className="border-b border-gray-50">
+                                                <tr key={index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                                                     <td className="py-2.5 text-xs text-[#131613] font-medium">{row.type}</td>
                                                     <td className="py-2.5 text-xs text-gray-600">{row.dosage}</td>
                                                     <td className="py-2.5 text-xs text-gray-600">{row.method}</td>
@@ -135,15 +135,15 @@ export default function CropGuidePage() {
                                 </p>
 
                                 <div className="grid grid-cols-3 gap-3">
-                                    <div className="bg-blue-50 rounded-lg p-3 text-center">
+                                    <div className="bg-blue-50 rounded-lg p-3 text-center hover:scale-105 transition-transform duration-300">
                                         <p className="text-xl font-bold text-blue-600">5 cm</p>
                                         <p className="text-[9px] text-blue-500 uppercase tracking-wider">Depth</p>
                                     </div>
-                                    <div className="bg-green-50 rounded-lg p-3 text-center">
+                                    <div className="bg-green-50 rounded-lg p-3 text-center hover:scale-105 transition-transform duration-300">
                                         <p className="text-xl font-bold text-green-600">pH 6.5</p>
                                         <p className="text-[9px] text-green-500 uppercase tracking-wider">Target Acidity</p>
                                     </div>
-                                    <div className="bg-orange-50 rounded-lg p-3 text-center">
+                                    <div className="bg-orange-50 rounded-lg p-3 text-center hover:scale-105 transition-transform duration-300">
                                         <p className="text-xl font-bold text-orange-600">28°C</p>
                                         <p className="text-[9px] text-orange-500 uppercase tracking-wider">Avg Temp</p>
                                     </div>
@@ -153,25 +153,25 @@ export default function CropGuidePage() {
                     </div>
 
                     {/* Right Column - Sidebar */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 animate-fade-in-right delay-500">
                         {/* Sustainable Practices */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
                             <h3 className="text-sm font-bold text-[#131613] mb-4">Sustainable Practices</h3>
 
                             {/* Do's */}
                             <div className="mb-4">
                                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">DO'S</p>
                                 <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                        <span className="material-symbols-outlined text-green-500 text-base mt-0.5">check_circle</span>
+                                    <div className="flex items-start gap-2 group">
+                                        <span className="material-symbols-outlined text-green-500 text-base mt-0.5 group-hover:scale-110 transition-transform">check_circle</span>
                                         <p className="text-xs text-gray-600">Apply fertilizer when the soil is moist but leaves are dry.</p>
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                        <span className="material-symbols-outlined text-green-500 text-base mt-0.5">check_circle</span>
+                                    <div className="flex items-start gap-2 group">
+                                        <span className="material-symbols-outlined text-green-500 text-base mt-0.5 group-hover:scale-110 transition-transform">check_circle</span>
                                         <p className="text-xs text-gray-600">Scout for stem borer signs weekly.</p>
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                        <span className="material-symbols-outlined text-green-500 text-base mt-0.5">check_circle</span>
+                                    <div className="flex items-start gap-2 group">
+                                        <span className="material-symbols-outlined text-green-500 text-base mt-0.5 group-hover:scale-110 transition-transform">check_circle</span>
                                         <p className="text-xs text-gray-600">Incorporate organic manure if available.</p>
                                     </div>
                                 </div>
@@ -181,29 +181,29 @@ export default function CropGuidePage() {
                             <div className="mb-4">
                                 <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">DON'TS</p>
                                 <div className="space-y-2">
-                                    <div className="flex items-start gap-2">
-                                        <span className="material-symbols-outlined text-red-500 text-base mt-0.5">cancel</span>
+                                    <div className="flex items-start gap-2 group">
+                                        <span className="material-symbols-outlined text-red-500 text-base mt-0.5 group-hover:scale-110 transition-transform">cancel</span>
                                         <p className="text-xs text-gray-600">Don't apply Urea if heavy rain is forecast within 24 hours.</p>
                                     </div>
-                                    <div className="flex items-start gap-2">
-                                        <span className="material-symbols-outlined text-red-500 text-base mt-0.5">cancel</span>
+                                    <div className="flex items-start gap-2 group">
+                                        <span className="material-symbols-outlined text-red-500 text-base mt-0.5 group-hover:scale-110 transition-transform">cancel</span>
                                         <p className="text-xs text-gray-600">Avoid mixing pesticides with growth regulators without consulting.</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <a href="#" className="text-primary text-xs font-medium flex items-center gap-1 hover:underline">
-                                View All Guidelines <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                            <a href="#" className="text-primary text-xs font-medium flex items-center gap-1 hover:underline group">
+                                View All Guidelines <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
                             </a>
                         </div>
 
                         {/* Expert Help Card */}
-                        <div className="bg-primary rounded-xl p-4 text-white">
+                        <div className="bg-primary rounded-xl p-4 text-white hover:bg-primary/90 transition-colors shadow-sm hover:shadow-md">
                             <h3 className="text-sm font-bold mb-2">Need Expert Help?</h3>
                             <p className="text-xs text-white/80 mb-4">
                                 Contact Agricultural Experts From Expertise of Crop Management
                             </p>
-                            <button className="w-full py-2 bg-white text-primary text-xs font-medium rounded-lg hover:bg-white/90 transition-colors">
+                            <button className="w-full py-2 bg-white text-primary text-xs font-medium rounded-lg hover:bg-white/90 transition-all hover:shadow hover:-translate-y-0.5">
                                 Contact Now
                             </button>
                         </div>

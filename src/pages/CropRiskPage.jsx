@@ -25,9 +25,9 @@ export default function CropRiskPage() {
             <DashboardNavbar />
 
             {/* Main Content */}
-            <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6">
+            <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6 animate-fade-in-up">
                 {/* Page Title */}
-                <div className="mb-6">
+                <div className="mb-6 animate-fade-in-left">
                     <h1 className="text-xl font-bold text-[#131613]">AI Crop Risk Assessment</h1>
                     <p className="text-gray-500 text-xs">
                         Real-time intelligence for <span className="text-primary font-medium">Polonnaruwa District</span> • Paddy Cultivation
@@ -37,7 +37,7 @@ export default function CropRiskPage() {
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Left Sidebar - Analysis Parameters */}
-                    <div className="lg:col-span-1">
+                    <div className="lg:col-span-1 animate-fade-in-left delay-100">
                         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 sticky top-20">
                             <h3 className="font-semibold text-sm text-[#131613] mb-1">Analysis Parameters</h3>
                             <p className="text-[10px] text-gray-400 mb-4">Configure your assessment</p>
@@ -48,7 +48,7 @@ export default function CropRiskPage() {
                                 <select
                                     value={selectedDistrict}
                                     onChange={(e) => setSelectedDistrict(e.target.value)}
-                                    className="w-full h-9 px-3 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-primary bg-white"
+                                    className="w-full h-9 px-3 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-primary bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                                 >
                                     {districts.map((d) => (
                                         <option key={d} value={d}>{d}</option>
@@ -62,7 +62,7 @@ export default function CropRiskPage() {
                                 <select
                                     value={selectedCrop}
                                     onChange={(e) => setSelectedCrop(e.target.value)}
-                                    className="w-full h-9 px-3 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-primary bg-white"
+                                    className="w-full h-9 px-3 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-primary bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                                 >
                                     {crops.map((c) => (
                                         <option key={c} value={c}>{c}</option>
@@ -76,7 +76,7 @@ export default function CropRiskPage() {
                                 <select
                                     value={selectedGrowthStage}
                                     onChange={(e) => setSelectedGrowthStage(e.target.value)}
-                                    className="w-full h-9 px-3 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-primary bg-white"
+                                    className="w-full h-9 px-3 rounded-lg border border-gray-200 text-xs text-gray-700 focus:outline-none focus:border-primary bg-white hover:bg-gray-50 transition-colors cursor-pointer"
                                 >
                                     {growthStages.map((g) => (
                                         <option key={g} value={g}>{g}</option>
@@ -85,8 +85,8 @@ export default function CropRiskPage() {
                             </div>
 
                             {/* Analyze Button */}
-                            <button className="w-full h-9 bg-primary text-white text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors mb-4">
-                                <span className="material-symbols-outlined text-sm">search</span>
+                            <button className="w-full h-9 bg-primary text-white text-xs font-medium rounded-lg flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-all shadow-sm hover:shadow hover:-translate-y-0.5 mb-4 group">
+                                <span className="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">search</span>
                                 Analyze Crop Risk
                             </button>
 
@@ -98,14 +98,14 @@ export default function CropRiskPage() {
                     <div className="lg:col-span-3 space-y-6">
                         {/* Current Conditions */}
                         <div>
-                            <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center justify-between mb-3 animate-fade-in-down delay-200">
                                 <h3 className="font-semibold text-sm text-[#131613]">Current Conditions</h3>
-                                <span className="text-primary text-[10px] font-medium">Live Data</span>
+                                <span className="text-primary text-[10px] font-medium animate-pulse">Live Data</span>
                             </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {/* Temperature */}
-                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 hover:shadow-md transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-200">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="material-symbols-outlined text-orange-400 text-lg">thermostat</span>
                                         <span className="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">Avg</span>
@@ -115,7 +115,7 @@ export default function CropRiskPage() {
                                 </div>
 
                                 {/* Humidity */}
-                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 hover:shadow-md transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-300">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="material-symbols-outlined text-blue-400 text-lg">humidity_percentage</span>
                                         <span className="text-[9px] text-green-500 bg-green-50 px-1.5 py-0.5 rounded">+12%</span>
@@ -125,7 +125,7 @@ export default function CropRiskPage() {
                                 </div>
 
                                 {/* Precipitation */}
-                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 hover:shadow-md transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-400">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="material-symbols-outlined text-cyan-400 text-lg">water_drop</span>
                                         <span className="text-[9px] text-orange-500 bg-orange-50 px-1.5 py-0.5 rounded">High</span>
@@ -135,7 +135,7 @@ export default function CropRiskPage() {
                                 </div>
 
                                 {/* Wind Speed */}
-                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 hover:shadow-md transition-all duration-300 hover:-translate-y-1 animate-scale-in delay-500">
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="material-symbols-outlined text-teal-400 text-lg">air</span>
                                         <span className="text-[9px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">SW</span>
@@ -147,7 +147,7 @@ export default function CropRiskPage() {
                         </div>
 
                         {/* AI Analysis Result */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 animate-fade-in-up delay-300 hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="font-semibold text-sm text-[#131613]">AI Analysis Result</h3>
                                 <span className="text-[10px] text-gray-400">
@@ -158,7 +158,7 @@ export default function CropRiskPage() {
 
                             <div className="flex flex-col md:flex-row md:items-start gap-4">
                                 {/* Risk Badge */}
-                                <div className="flex flex-col items-center gap-1">
+                                <div className="flex flex-col items-center gap-1 animate-pulse">
                                     <div className="flex items-center gap-1.5 px-4 py-2 bg-orange-100 text-orange-600 rounded-full">
                                         <span className="material-symbols-outlined text-sm">warning</span>
                                         <span className="text-xs font-semibold">Medium Risk</span>
@@ -177,11 +177,11 @@ export default function CropRiskPage() {
                         </div>
 
                         {/* Advisory & Recommendations */}
-                        <div>
+                        <div className="animate-fade-in-up delay-500">
                             <h3 className="font-semibold text-sm text-[#131613] mb-3">Advisory & Recommendations</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 {/* Suspend Irrigation */}
-                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 border-l-3 border-l-blue-400">
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 border-l-3 border-l-blue-400 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
                                             <span className="material-symbols-outlined text-blue-500 text-base">water</span>
@@ -192,13 +192,13 @@ export default function CropRiskPage() {
                                     <p className="text-[10px] text-gray-500 leading-relaxed mb-3">
                                         Soil moisture levels are sufficient. With incoming rain, suspend artificial irrigation for 3 days to prevent waterlogging.
                                     </p>
-                                    <a href="#" className="text-primary text-[10px] font-medium flex items-center gap-0.5 hover:underline">
-                                        View Schedule <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                                    <a href="#" className="text-primary text-[10px] font-medium flex items-center gap-0.5 hover:underline group">
+                                        View Schedule <span className="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
                                     </a>
                                 </div>
 
                                 {/* Delay Urea Application */}
-                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 border-l-3 border-l-green-400">
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 border-l-3 border-l-green-400 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
                                             <span className="material-symbols-outlined text-green-500 text-base">nutrition</span>
@@ -209,13 +209,13 @@ export default function CropRiskPage() {
                                     <p className="text-[10px] text-gray-500 leading-relaxed mb-3">
                                         High rainfall may cause leaching. Delay Nitrogen application until weather stabilizes to ensure maximum absorption.
                                     </p>
-                                    <a href="#" className="text-primary text-[10px] font-medium flex items-center gap-0.5 hover:underline">
-                                        Adjust Plan <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                                    <a href="#" className="text-primary text-[10px] font-medium flex items-center gap-0.5 hover:underline group">
+                                        Adjust Plan <span className="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
                                     </a>
                                 </div>
 
                                 {/* Preventive Spraying */}
-                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 border-l-3 border-l-orange-400">
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 border-l-3 border-l-orange-400 hover:shadow-md transition-all duration-300 hover:-translate-y-1">
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
                                             <span className="material-symbols-outlined text-orange-500 text-base">vaccines</span>
@@ -226,18 +226,18 @@ export default function CropRiskPage() {
                                     <p className="text-[10px] text-gray-500 leading-relaxed mb-3">
                                         Apply recommended fungicide within 24 hours to prevent Blast spore germination on wet leaves.
                                     </p>
-                                    <a href="#" className="text-primary text-[10px] font-medium flex items-center gap-0.5 hover:underline">
-                                        See Products <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                                    <a href="#" className="text-primary text-[10px] font-medium flex items-center gap-0.5 hover:underline group">
+                                        See Products <span className="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
                                     </a>
                                 </div>
                             </div>
                         </div>
 
                         {/* Regional Satellite View */}
-                        <div>
+                        <div className="animate-fade-in-up delay-700">
                             <p className="text-[10px] text-gray-400 mb-1">Regional Satellite View</p>
                             <h3 className="font-semibold text-sm text-primary mb-3">Polonnaruwa Agricultural Zone B</h3>
-                            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden h-64">
+                            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden h-64 hover:shadow-md transition-shadow">
                                 <iframe
                                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d126743.58585959864!2d81.00022565!3d7.9403022!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3afb456e05e5af8f%3A0x8f4e5a9b5e8f1c0!2sPolonnaruwa!5e0!3m2!1sen!2slk!4v1234567890"
                                     width="100%"

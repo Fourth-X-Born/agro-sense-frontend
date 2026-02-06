@@ -35,12 +35,12 @@ export default function MarketPricesPage() {
             image: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         },
         {
-            name: "Potatoes (NE)",
+            name: "Potatoes",
             price: 280,
             lastWeek: 277,
             change: 1,
             category: "Tubers",
-            image: "https://images.unsplash.com/photo-1518977676601-b53f82ber575?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+            image: "https://growhoss.com/cdn/shop/articles/potato_ecdbb7b2-3914-4edb-818d-eb6abfc66627_460x@2x.jpg?v=1761159166"
         },
         {
             name: "Green Beans",
@@ -64,7 +64,7 @@ export default function MarketPricesPage() {
             lastWeek: 186,
             change: 2,
             category: "Vegetables",
-            image: "https://images.unsplash.com/photo-1546470427-e26264be0b0e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+            image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
         },
         {
             name: "Green Chilies",
@@ -72,7 +72,7 @@ export default function MarketPricesPage() {
             lastWeek: 400,
             change: 0,
             category: "Spices",
-            image: "https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+            image: "https://casadeamor.in/cdn/shop/articles/vipul-borade-FvvgvCO-0gI-unsplash.jpg?v=1649308066&width=1100"
         }
     ];
 
@@ -92,15 +92,15 @@ export default function MarketPricesPage() {
             <DashboardNavbar />
 
             {/* Main Content */}
-            <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6">
+            <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6 animate-fade-in-up">
                 {/* Page Title */}
-                <div className="mb-6">
+                <div className="mb-6 animate-fade-in-left">
                     <h1 className="text-2xl font-bold text-[#131613]">Market Prices</h1>
                     <p className="text-primary text-sm">Daily updates from major economic centers across Sri Lanka</p>
                 </div>
 
                 {/* Search and Filters */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-6 animate-scale-in delay-100 hover:shadow-md transition-shadow">
                     <div className="flex flex-col md:flex-row gap-3">
                         {/* Search Input */}
                         <div className="flex-1 relative">
@@ -110,7 +110,7 @@ export default function MarketPricesPage() {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="Search for crops like Rice, Carrots..."
-                                className="w-full h-10 pl-10 pr-4 rounded-lg bg-gray-50 border border-gray-200 text-xs focus:outline-none focus:border-primary"
+                                className="w-full h-10 pl-10 pr-4 rounded-lg bg-gray-50 border border-gray-200 text-xs focus:outline-none focus:border-primary transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                             />
                         </div>
 
@@ -121,7 +121,7 @@ export default function MarketPricesPage() {
                                 <select
                                     value={region}
                                     onChange={(e) => setRegion(e.target.value)}
-                                    className="h-10 pl-8 pr-8 rounded-lg bg-white border border-gray-200 text-xs text-gray-600 focus:outline-none focus:border-primary appearance-none cursor-pointer"
+                                    className="h-10 pl-8 pr-8 rounded-lg bg-white border border-gray-200 text-xs text-gray-600 focus:outline-none focus:border-primary appearance-none cursor-pointer hover:bg-gray-50 transition-colors"
                                 >
                                     <option value="All">Region: All</option>
                                     <option value="Colombo">Colombo</option>
@@ -138,7 +138,7 @@ export default function MarketPricesPage() {
                                 <select
                                     value={category}
                                     onChange={(e) => setCategory(e.target.value)}
-                                    className="h-10 pl-8 pr-8 rounded-lg bg-white border border-gray-200 text-xs text-gray-600 focus:outline-none focus:border-primary appearance-none cursor-pointer"
+                                    className="h-10 pl-8 pr-8 rounded-lg bg-white border border-gray-200 text-xs text-gray-600 focus:outline-none focus:border-primary appearance-none cursor-pointer hover:bg-gray-50 transition-colors"
                                 >
                                     <option value="All">Category: All</option>
                                     <option value="Vegetables">Vegetables</option>
@@ -155,7 +155,7 @@ export default function MarketPricesPage() {
                                 <select
                                     value={sortBy}
                                     onChange={(e) => setSortBy(e.target.value)}
-                                    className="h-10 pl-8 pr-8 rounded-lg bg-white border border-gray-200 text-xs text-gray-600 focus:outline-none focus:border-primary appearance-none cursor-pointer"
+                                    className="h-10 pl-8 pr-8 rounded-lg bg-white border border-gray-200 text-xs text-gray-600 focus:outline-none focus:border-primary appearance-none cursor-pointer hover:bg-gray-50 transition-colors"
                                 >
                                     <option value="Trending">Sort: Trending</option>
                                     <option value="Price Low">Price: Low to High</option>
@@ -172,18 +172,22 @@ export default function MarketPricesPage() {
                 {/* Product Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     {products.map((product, index) => (
-                        <div key={index} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                        <div
+                            key={index}
+                            className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-fade-in-up"
+                            style={{ animationDelay: `${index * 100}ms` }}
+                        >
                             {/* Image */}
-                            <div className="relative h-36">
+                            <div className="relative h-36 overflow-hidden">
                                 <img
                                     src={product.image}
                                     alt={product.name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
                                     onError={(e) => {
-                                        e.target.src = "https://images.unsplash.com/photo-1518977676601-b53f82ber575?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
+                                        e.target.src = "https://images.unsplash.com/photo-1488459716781-31db52582fe9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80";
                                     }}
                                 />
-                                <span className={`absolute top-2 right-2 text-[9px] font-medium px-2 py-1 rounded ${getCategoryColor(product.category)}`}>
+                                <span className={`absolute top-2 right-2 text-[9px] font-medium px-2 py-1 rounded shadow-sm ${getCategoryColor(product.category)}`}>
                                     {product.category}
                                 </span>
                             </div>
@@ -216,7 +220,7 @@ export default function MarketPricesPage() {
                 </div>
 
                 {/* Data Source */}
-                <div className="text-center py-4">
+                <div className="text-center py-4 animate-fade-in delay-500">
                     <p className="text-xs text-gray-400">
                         Data Source: <span className="text-primary">Hector Kobbekaduwa Agrarian Research and Training Institute (HARTI)</span>.
                     </p>

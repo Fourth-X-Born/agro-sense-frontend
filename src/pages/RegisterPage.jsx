@@ -23,10 +23,18 @@ export default function RegisterPage() {
 
   const loadDistricts = async () => {
     try {
+      console.log("Fetching districts from masterDataService...");
       const data = await masterDataService.getDistricts();
-      setDistricts(data);
+      console.log("Districts received:", data);
+      if (Array.isArray(data)) {
+        setDistricts(data);
+      } else {
+        console.error("Districts data is not an array:", data);
+        alert("Error: Received invalid data from server.");
+      }
     } catch (error) {
       console.error("Failed to load districts", error);
+      alert("Failed to load districts: " + error.message);
     }
   };
 

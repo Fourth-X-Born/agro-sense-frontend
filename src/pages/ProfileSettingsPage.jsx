@@ -1,41 +1,52 @@
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import DashboardNavbar from "../components/dashboard/DashboardNavbar";
+import DashboardFooter from "../components/dashboard/DashboardFooter";
 import authService from "../services/authService";
+import masterDataService from "../services/masterDataService";
 
 export default function ProfileSettingsPage() {
     const navigate = useNavigate();
     const user = authService.getCurrentUser();
     const [activeTab, setActiveTab] = useState("profile");
+
+    // Initialize with empty strings if user data is missing
     const [formData, setFormData] = useState({
-        fullName: user ? user.name : "Ruwan Perera",
-        email: user ? user.email : "ruwan.p@example.com",
-        phone: user && user.phone ? user.phone : "77 123 4567",
+        fullName: user ? user.name : "",
+        email: user ? user.email : "",
+        phone: user ? user.phone : "",
         language: "English",
-        district: user ? user.district : "Polonnaruwa",
-        primaryCrop: user && user.crop ? user.crop : "Paddy (Rice)"
+        district: user ? user.district : "",
+        primaryCrop: user ? user.crop : ""
     });
-    const [selectedSecondaryCrops, setSelectedSecondaryCrops] = useState(["Vegetables"]);
 
-    const secondaryCropOptions = [
-        { name: "Maize", icon: "grass" },
-        { name: "Vegetables", icon: "nutrition" },
-        { name: "Fruits", icon: "local_florist" },
-        { name: "Spices", icon: "eco" }
-    ];
+    const [selectedSecondaryCrops, setSelectedSecondaryCrops] = useState([]);
+    const [districts, setDistricts] = useState([]);
+    const [crops, setCrops] = useState([]);
 
-    const toggleSecondaryCrop = (crop) => {
-        if (selectedSecondaryCrops.includes(crop)) {
-            setSelectedSecondaryCrops(selectedSecondaryCrops.filter(c => c !== crop));
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [districtsData, cropsData] = await Promise.all([
+                    masterDataService.getDistricts(),
+                    masterDataService.getCrops()
+                ]);
+                setDistricts(districtsData.map(d => d.name));
+                setCrops(cropsData);
+            } catch (error) {
+                console.error("Failed to fetch master data", error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const toggleSecondaryCrop = (cropName) => {
+        if (selectedSecondaryCrops.includes(cropName)) {
+            setSelectedSecondaryCrops(selectedSecondaryCrops.filter(c => c !== cropName));
         } else if (selectedSecondaryCrops.length < 3) {
-            setSelectedSecondaryCrops([...selectedSecondaryCrops, crop]);
+            setSelectedSecondaryCrops([...selectedSecondaryCrops, cropName]);
         }
     };
-
-    const districts = [
-        "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
-        "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
-        "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
-        "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
-        "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
-    ];
 
     return (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">

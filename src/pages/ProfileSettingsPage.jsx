@@ -1,43 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
+import authService from "../services/authService";
+import masterDataService from "../services/masterDataService";
 
 export default function ProfileSettingsPage() {
     const navigate = useNavigate();
+    const user = authService.getCurrentUser();
     const [activeTab, setActiveTab] = useState("profile");
+
+    // Initialize with empty strings if user data is missing
     const [formData, setFormData] = useState({
-        fullName: "Ruwan Perera",
-        email: "ruwan.p@example.com",
-        phone: "77 123 4567",
-        language: "Sinhala",
-        district: "Polonnaruwa",
-        primaryCrop: "Paddy (Rice)"
+        fullName: user ? user.name : "",
+        email: user ? user.email : "",
+        phone: user ? user.phone : "",
+        language: "English",
+        district: user ? user.district : "",
+        primaryCrop: user ? user.crop : ""
     });
-    const [selectedSecondaryCrops, setSelectedSecondaryCrops] = useState(["Vegetables"]);
 
-    const secondaryCropOptions = [
-        { name: "Maize", icon: "grass" },
-        { name: "Vegetables", icon: "nutrition" },
-        { name: "Fruits", icon: "local_florist" },
-        { name: "Spices", icon: "eco" }
-    ];
+    const [selectedSecondaryCrops, setSelectedSecondaryCrops] = useState([]);
+    const [districts, setDistricts] = useState([]);
+    const [crops, setCrops] = useState([]);
 
-    const toggleSecondaryCrop = (crop) => {
-        if (selectedSecondaryCrops.includes(crop)) {
-            setSelectedSecondaryCrops(selectedSecondaryCrops.filter(c => c !== crop));
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [districtsData, cropsData] = await Promise.all([
+                    masterDataService.getDistricts(),
+                    masterDataService.getCrops()
+                ]);
+                setDistricts(districtsData.map(d => d.name));
+                setCrops(cropsData);
+            } catch (error) {
+                console.error("Failed to fetch master data", error);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const toggleSecondaryCrop = (cropName) => {
+        if (selectedSecondaryCrops.includes(cropName)) {
+            setSelectedSecondaryCrops(selectedSecondaryCrops.filter(c => c !== cropName));
         } else if (selectedSecondaryCrops.length < 3) {
-            setSelectedSecondaryCrops([...selectedSecondaryCrops, crop]);
+            setSelectedSecondaryCrops([...selectedSecondaryCrops, cropName]);
         }
     };
-
-    const districts = [
-        "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
-        "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
-        "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
-        "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
-        "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
-    ];
 
     return (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
@@ -69,7 +78,7 @@ export default function ProfileSettingsPage() {
                                         />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-[#131613]">Ruwan Perera</p>
+                                        <p className="text-sm font-semibold text-[#131613]">{user ? user.name : "Ruwan Perera"}</p>
                                         <span className="text-[10px] text-primary font-medium">Pro Plan</span>
                                     </div>
                                 </div>
@@ -236,11 +245,10 @@ export default function ProfileSettingsPage() {
                                                 onChange={(e) => setFormData({ ...formData, primaryCrop: e.target.value })}
                                                 className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
                                             >
-                                                <option value="Paddy (Rice)">Paddy (Rice)</option>
-                                                <option value="Vegetables">Vegetables</option>
-                                                <option value="Tea">Tea</option>
-                                                <option value="Coconut">Coconut</option>
-                                                <option value="Rubber">Rubber</option>
+                                                <option value="">Select Primary Crop</option>
+                                                {crops.map(crop => (
+                                                    <option key={crop.id} value={crop.name}>{crop.name}</option>
+                                                ))}
                                             </select>
                                             <p className="text-[9px] text-primary mt-1 flex items-center gap-0.5">
                                                 <span className="material-symbols-outlined text-xs">info</span>
@@ -253,9 +261,9 @@ export default function ProfileSettingsPage() {
                                     <div>
                                         <label className="text-[10px] font-medium text-gray-500 block mb-2">Secondary Crops (Select up to 3)</label>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                            {secondaryCropOptions.map((crop) => (
+                                            {crops.map((crop) => (
                                                 <button
-                                                    key={crop.name}
+                                                    key={crop.id}
                                                     onClick={() => toggleSecondaryCrop(crop.name)}
                                                     className={`relative p-4 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${selectedSecondaryCrops.includes(crop.name)
                                                         ? "border-primary bg-primary/5"
@@ -268,7 +276,7 @@ export default function ProfileSettingsPage() {
                                                         </span>
                                                     )}
                                                     <span className={`material-symbols-outlined text-2xl mb-2 ${selectedSecondaryCrops.includes(crop.name) ? "text-primary" : "text-gray-400"
-                                                        }`}>{crop.icon}</span>
+                                                        }`}>eco</span>
                                                     <p className="text-xs font-medium text-[#131613]">{crop.name}</p>
                                                 </button>
                                             ))}

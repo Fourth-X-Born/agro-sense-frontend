@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import ricePlantImg from "../assets/images/rice-plant-white-background-vector-eps-10_638232-733-removebg-preview.png";
+import authService from "../api/authService";
 
 export default function AuthPage() {
     const location = useLocation();
@@ -11,6 +12,13 @@ export default function AuthPage() {
     const [districtOpen, setDistrictOpen] = useState(false);
     const [selectedDistrict, setSelectedDistrict] = useState("");
     const dropdownRef = useRef(null);
+
+    // Form state
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [fullName, setFullName] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const districts = [
         "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
@@ -33,16 +41,33 @@ export default function AuthPage() {
     const switchToLogin = () => navigate("/login");
     const switchToRegister = () => navigate("/register");
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // Simulate login - redirect to dashboard
-        navigate("/dashboard");
+        setError("");
+        setLoading(true);
+        try {
+            await authService.login(email, password);
+            navigate("/dashboard");
+        } catch (err) {
+            setError(err.response?.data?.message || "Login failed. Please check your credentials.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
-        // Simulate registration - redirect to dashboard
-        navigate("/dashboard");
+        setError("");
+        setLoading(true);
+        try {
+            await authService.register(email, password, fullName, selectedDistrict);
+            await authService.login(email, password);
+            navigate("/dashboard");
+        } catch (err) {
+            setError(err.response?.data?.message || "Registration failed. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -189,6 +214,12 @@ export default function AuthPage() {
                             }`}>
                             {isLogin && (
                                 <form onSubmit={handleLogin} className="flex flex-col justify-center h-full gap-4">
+                                    {/* Error Message */}
+                                    {error && (
+                                        <div className="bg-red-50 border border-red-200 text-red-600 text-xs p-2 rounded-lg">
+                                            {error}
+                                        </div>
+                                    )}
                                     {/* Email */}
                                     <div className="flex flex-col gap-1">
                                         <label className="text-[11px] font-medium text-[#131613]">Email</label>
@@ -196,6 +227,8 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">mail</span>
                                             <input
                                                 type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="e.g. person@gmail.com"
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
@@ -209,6 +242,8 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 text-gray-400 text-base">lock</span>
                                             <input
                                                 type={showPassword ? "text" : "password"}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
                                                 placeholder="Enter your password"
                                                 className="w-full h-9 pl-9 pr-9 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
@@ -250,6 +285,12 @@ export default function AuthPage() {
                             }`}>
                             {!isLogin && (
                                 <form onSubmit={handleRegister} className="flex flex-col gap-3">
+                                    {/* Error Message */}
+                                    {error && (
+                                        <div className="bg-red-50 border border-red-200 text-red-600 text-xs p-2 rounded-lg">
+                                            {error}
+                                        </div>
+                                    )}
                                     {/* Full Name */}
                                     <div className="flex flex-col gap-1">
                                         <label className="text-[11px] font-medium text-[#131613]">Full Name</label>
@@ -257,6 +298,8 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">person</span>
                                             <input
                                                 type="text"
+                                                value={fullName}
+                                                onChange={(e) => setFullName(e.target.value)}
                                                 placeholder="e.g. Sunil Perera"
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
@@ -306,6 +349,8 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">mail</span>
                                             <input
                                                 type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="e.g. person@gmail.com"
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
@@ -319,6 +364,8 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 text-gray-400 text-base">lock</span>
                                             <input
                                                 type={showPassword ? "text" : "password"}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
                                                 placeholder="Create a secure password"
                                                 className="w-full h-9 pl-9 pr-9 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />

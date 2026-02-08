@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
+import cropRiskService from "../api/cropRiskService";
 
 export default function CropRiskPage() {
     const [selectedDistrict, setSelectedDistrict] = useState("Polonnaruwa");
     const [selectedCrop, setSelectedCrop] = useState("Paddy (Rice)");
     const [selectedGrowthStage, setSelectedGrowthStage] = useState("Vegetative Phase");
+    const [risks, setRisks] = useState([]);
+    const [loading, setLoading] = useState(false);
 
     const districts = [
         "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
@@ -18,6 +21,26 @@ export default function CropRiskPage() {
 
     const crops = ["Paddy (Rice)", "Vegetables", "Fruits", "Tea", "Coconut", "Rubber"];
     const growthStages = ["Germination", "Seedling", "Vegetative Phase", "Flowering", "Grain Filling", "Maturity"];
+
+    // Fetch crop risks from API
+    useEffect(() => {
+        const fetchRisks = async () => {
+            try {
+                setLoading(true);
+                const data = await cropRiskService.getRisks({
+                    district: selectedDistrict,
+                    crop: selectedCrop
+                });
+                setRisks(data || []);
+            } catch (err) {
+                console.error("Failed to fetch crop risks:", err);
+                setRisks([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchRisks();
+    }, [selectedDistrict, selectedCrop]);
 
     return (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">

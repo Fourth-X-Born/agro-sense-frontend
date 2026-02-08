@@ -1,15 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
+import marketPriceService from "../api/marketPriceService";
 
 export default function MarketPricesPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [region, setRegion] = useState("All");
-    const [category, setCategory] = useState("Vegetables");
+    const [category, setCategory] = useState("All");
     const [sortBy, setSortBy] = useState("Trending");
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const products = [
+    // Default fallback data
+    const defaultProducts = [
         {
             name: "Rice (Samba)",
             price: 220,
@@ -75,6 +80,39 @@ export default function MarketPricesPage() {
             image: "https://casadeamor.in/cdn/shop/articles/vipul-borade-FvvgvCO-0gI-unsplash.jpg?v=1649308066&width=1100"
         }
     ];
+
+    // Fetch prices from API
+    useEffect(() => {
+        const fetchPrices = async () => {
+            try {
+                setLoading(true);
+                const filters = {};
+                if (region !== "All") filters.district = region;
+                const data = await marketPriceService.getPrices(filters);
+                // If API returns data, map it to display format; otherwise use defaults
+                if (data && data.length > 0) {
+                    const mappedData = data.map(item => ({
+                        name: item.cropName,
+                        price: item.price,
+                        lastWeek: item.price, // API doesn't have lastWeek, use same
+                        change: 0,
+                        category: "Vegetables",
+                        image: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+                        district: item.districtName
+                    }));
+                    setProducts(mappedData);
+                } else {
+                    setProducts(defaultProducts);
+                }
+            } catch (err) {
+                console.error("Failed to fetch prices:", err);
+                setProducts(defaultProducts); // Fallback to default data
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPrices();
+    }, [region]);
 
     const getCategoryColor = (cat) => {
         switch (cat) {

@@ -1,8 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import ricePlantImg from "../assets/images/rice-plant-white-background-vector-eps-10_638232-733-removebg-preview.png";
 import authService from "../services/authService";
-import dataService from "../services/dataService";
 
 export default function AuthPage() {
     const location = useLocation();
@@ -10,11 +9,8 @@ export default function AuthPage() {
     const isLogin = location.pathname === "/login";
 
     const [showPassword, setShowPassword] = useState(false);
-    const [districtOpen, setDistrictOpen] = useState(false);
-    const [districts, setDistricts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const dropdownRef = useRef(null);
 
     // Login form state
     const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -24,41 +20,7 @@ export default function AuthPage() {
         name: "",
         email: "",
         password: "",
-        districtId: "",
-        districtName: "",
     });
-
-    // Fetch districts on mount
-    useEffect(() => {
-        const fetchDistricts = async () => {
-            try {
-                const response = await dataService.getDistricts();
-                if (response.success && response.data) {
-                    setDistricts(response.data);
-                }
-            } catch (err) {
-                console.error("Error fetching districts:", err);
-                // Fallback to hardcoded districts if API fails
-                setDistricts([
-                    { id: 1, name: "Ampara" }, { id: 2, name: "Anuradhapura" }, { id: 3, name: "Badulla" },
-                    { id: 4, name: "Batticaloa" }, { id: 5, name: "Colombo" }, { id: 6, name: "Galle" },
-                    { id: 7, name: "Gampaha" }, { id: 8, name: "Hambantota" }, { id: 9, name: "Jaffna" },
-                    { id: 10, name: "Kalutara" }, { id: 11, name: "Kandy" }, { id: 12, name: "Kegalle" },
-                ]);
-            }
-        };
-        fetchDistricts();
-    }, []);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setDistrictOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
 
     const switchToLogin = () => {
         setError("");
@@ -98,8 +60,8 @@ export default function AuthPage() {
         e.preventDefault();
         setError("");
 
-        if (!registerForm.name || !registerForm.email || !registerForm.password || !registerForm.districtId) {
-            setError("Please fill in all fields including district");
+        if (!registerForm.name || !registerForm.email || !registerForm.password) {
+            setError("Please fill in all fields");
             return;
         }
 
@@ -109,13 +71,12 @@ export default function AuthPage() {
                 name: registerForm.name,
                 email: registerForm.email,
                 password: registerForm.password,
-                districtId: parseInt(registerForm.districtId),
             });
 
             if (response.success) {
                 // Auto-login after successful registration
                 await authService.login(registerForm.email, registerForm.password);
-                navigate("/dashboard");
+                navigate("/complete-profile");
             } else {
                 setError(response.message || "Registration failed");
             }
@@ -125,15 +86,6 @@ export default function AuthPage() {
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleDistrictSelect = (district) => {
-        setRegisterForm(prev => ({
-            ...prev,
-            districtId: district.id,
-            districtName: district.name
-        }));
-        setDistrictOpen(false);
     };
 
     return (
@@ -187,14 +139,6 @@ export default function AuthPage() {
                     <img src={ricePlantImg} alt="" className="h-[110px] opacity-14 -scale-x-100 -mr-3"
                         style={{ animation: 'sway 2.8s ease-in-out infinite', transformOrigin: 'bottom center', animationDelay: '0.9s' }} />
                 </div>
-            </div>
-            {/* Language Selector - Positioned Absolute */}
-            <div className="absolute top-4 right-6 z-20">
-                <button className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-800 transition-colors">
-                    <span className="material-symbols-outlined text-base">language</span>
-                    <span>English</span>
-                    <span className="material-symbols-outlined text-sm">expand_more</span>
-                </button>
             </div>
 
             {/* Main Card - Centered */}
@@ -257,7 +201,7 @@ export default function AuthPage() {
                     )}
 
                     {/* Tabs */}
-                    <div className="flex border-b border-gray-200 mb-4">
+                    <div className="flex border-b border-gray-200 mb-3">
                         <button
                             onClick={switchToLogin}
                             className={`flex-1 text-center py-2 text-xs font-medium border-b-2 transition-all duration-500 ${isLogin
@@ -279,14 +223,14 @@ export default function AuthPage() {
                     </div>
 
                     {/* Form Container with Animation - Fixed height for consistency */}
-                    <div className="relative overflow-hidden h-[350px]">
+                    <div className="relative overflow-hidden h-[260px]">
                         {/* Login Form */}
                         <div className={`h-full transition-all duration-500 ease-in-out ${isLogin
                             ? "opacity-100 translate-x-0"
                             : "opacity-0 -translate-x-full absolute inset-0 pointer-events-none"
                             }`}>
                             {isLogin && (
-                                <form onSubmit={handleLogin} className="flex flex-col justify-center h-full gap-4">
+                                <form onSubmit={handleLogin} className="flex flex-col justify-center h-full gap-3">
                                     {/* Email */}
                                     <div className="flex flex-col gap-1">
                                         <label className="text-[11px] font-medium text-[#131613]">Email</label>
@@ -361,7 +305,7 @@ export default function AuthPage() {
                             : "opacity-0 translate-x-full absolute inset-0 pointer-events-none"
                             }`}>
                             {!isLogin && (
-                                <form onSubmit={handleRegister} className="flex flex-col gap-3">
+                                <form onSubmit={handleRegister} className="flex flex-col gap-2.5">
                                     {/* Full Name */}
                                     <div className="flex flex-col gap-1">
                                         <label className="text-[11px] font-medium text-[#131613]">Full Name</label>
@@ -375,39 +319,6 @@ export default function AuthPage() {
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
                                         </div>
-                                    </div>
-
-                                    {/* District - Custom Dropdown */}
-                                    <div className="flex flex-col gap-1">
-                                        <label className="text-[11px] font-medium text-[#131613]">District</label>
-                                        <div className="relative" ref={dropdownRef}>
-                                            <button
-                                                type="button"
-                                                onClick={() => setDistrictOpen(!districtOpen)}
-                                                className="w-full h-9 pl-9 pr-8 rounded-lg border-2 border-gray-300 text-xs text-left focus:outline-none focus:border-primary bg-white cursor-pointer flex items-center"
-                                            >
-                                                <span className="material-symbols-outlined absolute left-3 text-gray-400 text-base">location_on</span>
-                                                <span className={registerForm.districtName ? "text-gray-700" : "text-gray-500"}>
-                                                    {registerForm.districtName || "Select your farming district"}
-                                                </span>
-                                                <span className="material-symbols-outlined absolute right-3 text-gray-400 text-base">expand_more</span>
-                                            </button>
-
-                                            {districtOpen && (
-                                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-40 overflow-y-auto">
-                                                    {districts.map((district) => (
-                                                        <div
-                                                            key={district.id}
-                                                            onClick={() => handleDistrictSelect(district)}
-                                                            className="px-3 py-1.5 text-xs text-gray-700 hover:bg-primary/10 cursor-pointer"
-                                                        >
-                                                            {district.name}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <p className="text-[10px] text-gray-400">We use this to provide localized weather and soil alerts.</p>
                                     </div>
 
                                     {/* Email */}
@@ -471,24 +382,6 @@ export default function AuthPage() {
                             )}
                         </div>
                     </div>
-
-                    {/* Divider */}
-                    <div className="flex items-center gap-2 my-4">
-                        <div className="flex-1 h-px bg-gray-200"></div>
-                        <span className="text-[10px] text-gray-400 uppercase tracking-wider">Or continue with</span>
-                        <div className="flex-1 h-px bg-gray-200"></div>
-                    </div>
-
-                    {/* Google Button */}
-                    <button className="w-full h-9 rounded-lg border border-gray-300 text-xs font-medium text-[#131613] flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                        </svg>
-                        Google
-                    </button>
 
                     {/* Bottom Link */}
                     <p className="text-center text-[11px] text-gray-400 mt-3">

@@ -37,6 +37,21 @@ const authService = {
     isAuthenticated: () => {
         return !!localStorage.getItem('user');
     },
+
+    // Update user profile (phone and district)
+    updateProfile: async (profileData) => {
+        const currentUser = authService.getCurrentUser();
+        if (!currentUser || !currentUser.id) {
+            throw new Error("User not logged in");
+        }
+        const response = await api.put(`/profile/update?farmerId=${currentUser.id}`, profileData);
+        if (response.success && response.data) {
+            // Update stored user data
+            const updatedUser = { ...currentUser, ...response.data };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        return response;
+    },
 };
 
 export default authService;

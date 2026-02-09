@@ -1,42 +1,11 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [districtOpen, setDistrictOpen] = useState(false);
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-  const dropdownRef = useRef(null);
-
-  const districts = [
-    "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
-    "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
-    "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
-    "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
-    "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
-  ];
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setDistrictOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   return (
     <div className="h-screen bg-[#f6f8f6] flex flex-col overflow-hidden">
-      {/* Language Selector */}
-      <div className="flex justify-end px-4 py-2">
-        <button className="flex items-center gap-1 text-[10px] text-gray-600 hover:text-gray-800">
-          <span className="material-symbols-outlined text-sm">language</span>
-          <span>English</span>
-          <span className="material-symbols-outlined text-xs">expand_more</span>
-        </button>
-      </div>
-
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-4">
         <div className="flex w-full max-w-[720px] bg-white rounded-lg shadow-lg overflow-visible">
@@ -102,42 +71,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* District - Custom Dropdown */}
-              <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] font-medium text-[#131613]">District</label>
-                <div className="relative" ref={dropdownRef}>
-                  <button
-                    type="button"
-                    onClick={() => setDistrictOpen(!districtOpen)}
-                    className="w-full h-8 pl-8 pr-7 rounded border border-gray-300 text-[10px] text-left focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white cursor-pointer flex items-center"
-                  >
-                    <span className="material-symbols-outlined absolute left-2 text-gray-400 text-sm">location_on</span>
-                    <span className={selectedDistrict ? "text-gray-700" : "text-gray-500"}>
-                      {selectedDistrict || "Select your farming district"}
-                    </span>
-                    <span className="material-symbols-outlined absolute right-2 text-gray-400 text-sm">expand_more</span>
-                  </button>
-
-                  {districtOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 max-h-40 overflow-y-auto">
-                      {districts.map((district) => (
-                        <div
-                          key={district}
-                          onClick={() => {
-                            setSelectedDistrict(district);
-                            setDistrictOpen(false);
-                          }}
-                          className="px-3 py-1.5 text-[10px] text-gray-700 hover:bg-primary/10 cursor-pointer"
-                        >
-                          {district}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <p className="text-[8px] text-gray-400">We use this to provide localized weather and soil alerts.</p>
-              </div>
-
               {/* Email */}
               <div className="flex flex-col gap-0.5">
                 <label className="text-[9px] font-medium text-[#131613]">Email</label>
@@ -182,24 +115,6 @@ export default function RegisterPage() {
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </button>
             </form>
-
-            {/* Divider */}
-            <div className="flex items-center gap-2 my-3">
-              <div className="flex-1 h-px bg-gray-200"></div>
-              <span className="text-[8px] text-gray-400 uppercase tracking-wider">Or continue with</span>
-              <div className="flex-1 h-px bg-gray-200"></div>
-            </div>
-
-            {/* Google Button */}
-            <button className="w-full h-8 rounded border border-gray-300 text-[10px] font-medium text-[#131613] flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors">
-              <svg className="w-3 h-3" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Google
-            </button>
 
             {/* Terms */}
             <p className="text-center text-[8px] text-gray-400 mt-3">

@@ -1,25 +1,40 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 import dataService from "../services/dataService";
 import authService from "../services/authService";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
 export default function ProfileSettingsPage() {
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
     const [activeTab, setActiveTab] = useState("profile");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
     const [districts, setDistricts] = useState([]);
     const [crops, setCrops] = useState([]);
     const [successMessage, setSuccessMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
+    const [profilePhoto, setProfilePhoto] = useState(null);
+
+    // Password change modal state
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+    });
+    const [changingPassword, setChangingPassword] = useState(false);
+    const [passwordError, setPasswordError] = useState("");
+    const [passwordSuccess, setPasswordSuccess] = useState("");
 
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
         phone: "",
-        language: "Sinhala",
         districtId: "",
         districtName: "",
         primaryCropId: "",
@@ -63,9 +78,8 @@ export default function ProfileSettingsPage() {
             }
 
             // Try to fetch profile from API
-            const farmerId = localStorage.getItem("farmerId");
-            if (farmerId) {
-                const profileRes = await dataService.getProfile(farmerId);
+            if (userData?.id) {
+                const profileRes = await dataService.getProfile(userData.id);
                 if (profileRes.success && profileRes.data) {
                     const profile = profileRes.data;
                     setFormData(prev => ({
@@ -75,9 +89,17 @@ export default function ProfileSettingsPage() {
                         phone: profile.phone || "",
                         districtId: profile.districtId || prev.districtId,
                         districtName: profile.districtName || prev.districtName,
-                        primaryCropId: profile.primaryCropId || "",
-                        primaryCropName: profile.primaryCropName || "",
+                        primaryCropId: profile.cropId || "",
+                        primaryCropName: profile.cropName || "",
                     }));
+                    if (profile.profilePhoto) {
+                        setProfilePhoto(profile.profilePhoto);
+                        // Update localStorage with profile photo from API
+                        const updatedUser = { ...userData, profilePhoto: profile.profilePhoto };
+                        localStorage.setItem("user", JSON.stringify(updatedUser));
+                        // Only trigger navbar update on page load, not continuously
+                        window.dispatchEvent(new Event("userUpdated"));
+                    }
                 }
             }
         } catch (err) {
@@ -93,8 +115,8 @@ export default function ProfileSettingsPage() {
             setErrorMessage("");
             setSuccessMessage("");
 
-            const farmerId = localStorage.getItem("farmerId");
-            if (!farmerId) {
+            const userData = JSON.parse(localStorage.getItem("user") || "{}");
+            if (!userData?.id) {
                 setErrorMessage("User session not found. Please login again.");
                 return;
             }
@@ -103,15 +125,28 @@ export default function ProfileSettingsPage() {
                 name: formData.fullName,
                 phone: formData.phone,
                 districtId: parseInt(formData.districtId) || null,
-                primaryCropId: parseInt(formData.primaryCropId) || null,
+                cropId: parseInt(formData.primaryCropId) || null,
             };
 
-            const response = await dataService.updateProfile(farmerId, updateData);
-            if (response.success) {
+            const response = await dataService.updateProfile(userData.id, updateData);
+            if (response.success && response.data) {
+                const profile = response.data;
                 setSuccessMessage("Profile updated successfully!");
-                // Update localStorage with new data
-                const userData = JSON.parse(localStorage.getItem("user") || "{}");
-                localStorage.setItem("user", JSON.stringify({ ...userData, ...updateData }));
+                // Update localStorage with data from server response
+                const updatedUser = { 
+                    ...userData, 
+                    name: profile.name,
+                    phone: profile.phone,
+                    districtId: profile.districtId,
+                    districtName: profile.districtName,
+                    district: profile.districtName, // For compatibility with LoginResponse format
+                    cropId: profile.cropId,
+                    cropName: profile.cropName,
+                    crop: profile.cropName, // For compatibility with LoginResponse format
+                    profilePhoto: profilePhoto
+                };
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+                window.dispatchEvent(new Event("userUpdated"));
             } else {
                 setErrorMessage(response.message || "Failed to update profile");
             }
@@ -125,7 +160,60 @@ export default function ProfileSettingsPage() {
 
     const handleLogout = () => {
         authService.logout();
-        navigate("/login");
+        // Use replace to prevent back navigation after logout
+        window.location.replace("/login");
+    };
+
+    const handlePasswordChange = async () => {
+        setPasswordError("");
+        setPasswordSuccess("");
+
+        // Validate
+        if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+            setPasswordError("All fields are required");
+            return;
+        }
+
+        if (passwordData.newPassword.length < 6) {
+            setPasswordError("New password must be at least 6 characters");
+            return;
+        }
+
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            setPasswordError("New passwords do not match");
+            return;
+        }
+
+        try {
+            setChangingPassword(true);
+            const userData = JSON.parse(localStorage.getItem("user") || "{}");
+            if (!userData?.id) {
+                setPasswordError("User session not found. Please login again.");
+                return;
+            }
+
+            const response = await dataService.changePassword(
+                userData.id,
+                passwordData.currentPassword,
+                passwordData.newPassword
+            );
+
+            if (response.success) {
+                setPasswordSuccess("Password changed successfully!");
+                setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                setTimeout(() => {
+                    setShowPasswordModal(false);
+                    setPasswordSuccess("");
+                }, 2000);
+            } else {
+                setPasswordError(response.message || "Failed to change password");
+            }
+        } catch (err) {
+            console.error("Error changing password:", err);
+            setPasswordError("Failed to change password. Please try again.");
+        } finally {
+            setChangingPassword(false);
+        }
     };
 
     const toggleSecondaryCrop = (crop) => {
@@ -154,6 +242,82 @@ export default function ProfileSettingsPage() {
             primaryCropId: cropId,
             primaryCropName: crop?.name || ""
         });
+    };
+
+    const handlePhotoUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setErrorMessage("Please select an image file");
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setErrorMessage("Image size must be less than 5MB");
+            return;
+        }
+
+        try {
+            setUploadingPhoto(true);
+            setErrorMessage("");
+            const userData = JSON.parse(localStorage.getItem("user") || "{}");
+            if (!userData?.id) {
+                setErrorMessage("User session not found");
+                return;
+            }
+
+            const response = await dataService.uploadProfilePhoto(userData.id, file);
+            if (response.success && response.data?.profilePhoto) {
+                setProfilePhoto(response.data.profilePhoto);
+                // Don't show success message here - will show after Save Changes
+            } else {
+                setErrorMessage(response.message || "Failed to upload photo");
+            }
+        } catch (err) {
+            console.error("Photo upload error:", err);
+            setErrorMessage("Failed to upload photo. Please try again.");
+        } finally {
+            setUploadingPhoto(false);
+            // Reset file input
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        }
+    };
+
+    const handlePhotoDelete = async () => {
+        try {
+            setUploadingPhoto(true);
+            setErrorMessage("");
+            const userData = JSON.parse(localStorage.getItem("user") || "{}");
+            if (!userData?.id) {
+                setErrorMessage("User session not found");
+                return;
+            }
+
+            const response = await dataService.deleteProfilePhoto(userData.id);
+            if (response.success) {
+                setProfilePhoto(null);
+                // Don't show success message here - will show after Save Changes
+            } else {
+                setErrorMessage(response.message || "Failed to delete photo");
+            }
+        } catch (err) {
+            console.error("Photo delete error:", err);
+            setErrorMessage("Failed to delete photo. Please try again.");
+        } finally {
+            setUploadingPhoto(false);
+        }
+    };
+
+    const getPhotoUrl = (photoPath) => {
+        if (!photoPath) return null;
+        if (photoPath.startsWith('http')) return photoPath;
+        // Convert API path to full URL
+        return `${API_BASE_URL.replace('/api', '')}${photoPath}`;
     };
 
     if (loading) {
@@ -188,43 +352,46 @@ export default function ProfileSettingsPage() {
                             {/* Profile Header */}
                             <div className="p-4 border-b border-gray-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-primary text-xl">person</span>
+                                    <div className="relative group">
+                                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+                                            {profilePhoto ? (
+                                                <img 
+                                                    src={getPhotoUrl(profilePhoto)} 
+                                                    alt="Profile" 
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="material-symbols-outlined text-primary text-xl">person</span>
+                                            )}
+                                        </div>
+                                        {/* Edit overlay */}
+                                        <button
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={uploadingPhoto}
+                                            className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                                        >
+                                            <span className="material-symbols-outlined text-white text-sm">
+                                                {uploadingPhoto ? "progress_activity" : "photo_camera"}
+                                            </span>
+                                        </button>
                                     </div>
                                     <div>
                                         <p className="text-sm font-semibold text-[#131613]">{formData.fullName || "User"}</p>
                                         <span className="text-[10px] text-gray-500">{formData.email}</span>
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Navigation Menu */}
-                            <div className="p-2">
-                                <button
-                                    onClick={() => setActiveTab("profile")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "profile" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"}`}
-                                >
-                                    <span className="material-symbols-outlined text-base">person</span>
-                                    Profile
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("farm")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "farm" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"}`}
-                                >
-                                    <span className="material-symbols-outlined text-base">agriculture</span>
-                                    Farm Details
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("security")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "security" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"}`}
-                                >
-                                    <span className="material-symbols-outlined text-base">lock</span>
-                                    Security
-                                </button>
+                                {/* Hidden file input */}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handlePhotoUpload}
+                                    className="hidden"
+                                />
                             </div>
 
                             {/* Logout */}
-                            <div className="p-2 border-t border-gray-100">
+                            <div className="p-2">
                                 <button
                                     onClick={handleLogout}
                                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
@@ -278,6 +445,60 @@ export default function ProfileSettingsPage() {
 
                             {/* Form Content */}
                             <div className="p-5 space-y-6">
+                                {/* Profile Photo Section */}
+                                <div className="animate-fade-in-up delay-200">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <span className="material-symbols-outlined text-primary text-base">photo_camera</span>
+                                        <span className="text-sm font-semibold text-[#131613]">Profile Photo</span>
+                                    </div>
+
+                                    <div className="flex items-center gap-6">
+                                        <div className="relative">
+                                            <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border-4 border-gray-100">
+                                                {profilePhoto ? (
+                                                    <img 
+                                                        src={getPhotoUrl(profilePhoto)} 
+                                                        alt="Profile" 
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <span className="material-symbols-outlined text-primary text-4xl">person</span>
+                                                )}
+                                            </div>
+                                            {uploadingPhoto && (
+                                                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-white animate-spin">progress_activity</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col gap-2">
+                                            <p className="text-xs text-gray-500">Upload a profile photo. Max size 5MB.</p>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    disabled={uploadingPhoto}
+                                                    className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-1"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">upload</span>
+                                                    {profilePhoto ? "Change" : "Upload"}
+                                                </button>
+                                                {profilePhoto && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handlePhotoDelete}
+                                                        disabled={uploadingPhoto}
+                                                        className="px-3 py-1.5 border border-red-200 text-red-500 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center gap-1"
+                                                    >
+                                                        <span className="material-symbols-outlined text-sm">delete</span>
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 {/* Personal Details */}
                                 <div className="animate-fade-in-up delay-300">
                                     <div className="flex items-center gap-2 mb-4">
@@ -318,19 +539,6 @@ export default function ProfileSettingsPage() {
                                                 />
                                             </div>
                                         </div>
-
-                                        <div>
-                                            <label className="text-[10px] font-medium text-gray-500 block mb-1">Preferred Language</label>
-                                            <select
-                                                value={formData.language}
-                                                onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
-                                            >
-                                                <option value="Sinhala">Sinhala</option>
-                                                <option value="Tamil">Tamil</option>
-                                                <option value="English">English</option>
-                                            </select>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -369,10 +577,6 @@ export default function ProfileSettingsPage() {
                                                     <option key={c.id} value={c.id}>{c.name}</option>
                                                 ))}
                                             </select>
-                                            <p className="text-[9px] text-primary mt-1 flex items-center gap-0.5">
-                                                <span className="material-symbols-outlined text-xs">info</span>
-                                                AI advisory will update based on this selection.
-                                            </p>
                                         </div>
                                     </div>
 
@@ -414,7 +618,15 @@ export default function ProfileSettingsPage() {
                                             <p className="text-xs font-medium text-[#131613]">Password</p>
                                             <p className="text-[10px] text-gray-400">Change your account password</p>
                                         </div>
-                                        <button className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-white transition-colors">
+                                        <button 
+                                            onClick={() => {
+                                                setShowPasswordModal(true);
+                                                setPasswordError("");
+                                                setPasswordSuccess("");
+                                                setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+                                            }}
+                                            className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-white transition-colors"
+                                        >
                                             Change Password
                                         </button>
                                     </div>
@@ -424,6 +636,103 @@ export default function ProfileSettingsPage() {
                     </div>
                 </div>
             </main>
+
+            {/* Password Change Modal */}
+            {showPasswordModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 animate-scale-in">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+                            <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-primary text-xl">lock</span>
+                                <h3 className="text-base font-bold text-[#131613]">Change Password</h3>
+                            </div>
+                            <button 
+                                onClick={() => setShowPasswordModal(false)}
+                                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                            >
+                                <span className="material-symbols-outlined text-gray-500">close</span>
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-5 space-y-4">
+                            {passwordError && (
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm">error</span>
+                                    {passwordError}
+                                </div>
+                            )}
+                            {passwordSuccess && (
+                                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-600 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                                    {passwordSuccess}
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">Current Password</label>
+                                <input
+                                    type="password"
+                                    value={passwordData.currentPassword}
+                                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    placeholder="Enter current password"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">New Password</label>
+                                <input
+                                    type="password"
+                                    value={passwordData.newPassword}
+                                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    placeholder="Enter new password (min 6 characters)"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1.5">Confirm New Password</label>
+                                <input
+                                    type="password"
+                                    value={passwordData.confirmPassword}
+                                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                    className="w-full h-10 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                    placeholder="Confirm new password"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="flex justify-end gap-2 p-5 border-t border-gray-100">
+                            <button
+                                onClick={() => setShowPasswordModal(false)}
+                                className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handlePasswordChange}
+                                disabled={changingPassword}
+                                className="px-4 py-2 bg-primary rounded-lg text-xs font-medium text-white hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {changingPassword ? (
+                                    <>
+                                        <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                                        Changing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined text-sm">lock</span>
+                                        Change Password
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <DashboardFooter />
         </div>

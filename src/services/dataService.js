@@ -102,6 +102,33 @@ const dataService = {
         const response = await api.put(`/profile/update?farmerId=${farmerId}`, profileData);
         return response;
     },
+
+    // Upload profile photo
+    uploadProfilePhoto: async (farmerId, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post(`/profile/photo/upload?farmerId=${farmerId}`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response;
+    },
+
+    // Delete profile photo
+    deleteProfilePhoto: async (farmerId) => {
+        const response = await api.delete(`/profile/photo/delete?farmerId=${farmerId}`);
+        return response;
+    },
+
+    // Change password
+    changePassword: async (farmerId, currentPassword, newPassword) => {
+        const response = await api.put(`/profile/change-password?farmerId=${farmerId}`, {
+            currentPassword,
+            newPassword
+        });
+        return response;
+    },
 };
 
 export default dataService;

@@ -103,6 +103,14 @@ const dataService = {
         return response;
     },
 
+    // ==================== CROP GUIDE ====================
+    // Get crop guide by cropId (public endpoint)
+    getCropGuide: async (cropId) => {
+        const response = await api.get(`/crop-guide/${cropId}`);
+        return response;
+    },
+
+    // ==================== WEATHER ====================
     // Get weather data for a district
     getWeather: async (districtId) => {
         const response = await api.get(`/weather?districtId=${districtId}`);

@@ -7,7 +7,7 @@ export default function AdminDashboardPage() {
     const [stats, setStats] = useState({
         totalCrops: 0,
         totalDistricts: 0,
-        totalMarketPrices: 0,
+        totalFarmers: 0,
         totalFertilizers: 0,
     });
     const [recentPrices, setRecentPrices] = useState([]);
@@ -20,17 +20,18 @@ export default function AdminDashboardPage() {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const [cropsRes, districtsRes, pricesRes, fertilizersRes] = await Promise.all([
+            const [cropsRes, districtsRes, pricesRes, fertilizersRes, farmersRes] = await Promise.all([
                 adminService.getCrops(),
                 adminService.getDistricts(),
                 adminService.getMarketPrices(),
                 adminService.getFertilizers(),
+                adminService.getFarmers(),
             ]);
 
             setStats({
                 totalCrops: cropsRes?.length || 0,
                 totalDistricts: districtsRes?.length || 0,
-                totalMarketPrices: pricesRes?.length || 0,
+                totalFarmers: farmersRes?.length || 0,
                 totalFertilizers: fertilizersRes?.length || 0,
             });
 
@@ -46,7 +47,7 @@ export default function AdminDashboardPage() {
     const statCards = [
         { label: "Total Crops", value: stats.totalCrops, icon: "eco", iconBg: "bg-green-50", iconColor: "text-primary" },
         { label: "Total Districts", value: stats.totalDistricts, icon: "location_on", iconBg: "bg-blue-50", iconColor: "text-blue-500" },
-        { label: "Market Prices", value: stats.totalMarketPrices, icon: "trending_up", iconBg: "bg-orange-50", iconColor: "text-orange-500" },
+        { label: "Total Farmers", value: stats.totalFarmers, icon: "groups", iconBg: "bg-orange-50", iconColor: "text-orange-500" },
         { label: "Fertilizer Recs", value: stats.totalFertilizers, icon: "science", iconBg: "bg-purple-50", iconColor: "text-purple-500" },
     ];
 

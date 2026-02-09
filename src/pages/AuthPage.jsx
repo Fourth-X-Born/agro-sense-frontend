@@ -209,7 +209,8 @@ export default function AuthPage() {
                     ></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
                     <div className="relative z-10 flex flex-col justify-between p-5 h-full">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-primary text-xl">spa</span>
                             <span className="text-white text-sm font-bold">Agro<span className="text-primary">Sense</span> AI</span>
                         </div>
                         <div className="flex flex-col gap-2">
@@ -237,6 +238,7 @@ export default function AuthPage() {
                     <div className="text-center mb-6">
                         {/* Mobile/Form Logo */}
                         <div className="flex items-center justify-center gap-2 mb-6">
+                            <span className="material-symbols-outlined text-primary text-xl">spa</span>
                             <span className="text-[#131613] text-sm font-bold">Agro<span className="text-primary">Sense</span> AI</span>
                         </div>
 

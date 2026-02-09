@@ -1,9 +1,434 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
+import dataService from "../services/dataService";
 
 export default function DashboardPage() {
+  // User data from localStorage
+  const [user, setUser] = useState({ name: "Farmer", district: "Your District", crop: "Crop" });
+
+  // Weather data
+  const [weatherData, setWeatherData] = useState(null);
+  const [weatherAlerts, setWeatherAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Market prices
+  const [marketPrices, setMarketPrices] = useState([]);
+  const [pricesLoading, setPricesLoading] = useState(true);
+
+  // Get current date
+  const today = new Date();
+  const dateString = today.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' });
+
+  // Determine Sri Lankan farming season (Yala or Maha)
+  const getCurrentSeason = () => {
+    const month = today.getMonth(); // 0-indexed (0 = January)
+    // Yala Season: April (3) to August (7) - cultivation during dry season using irrigation
+    // Maha Season: September (8) to March (2) - cultivation during monsoon season
+    if (month >= 3 && month <= 7) {
+      return { name: "Yala", period: "Apr-Aug", icon: "sunny", type: "dry" };
+    }
+    return { name: "Maha", period: "Sep-Mar", icon: "rainy", type: "wet" };
+  };
+
+  const currentSeason = getCurrentSeason();
+
+  useEffect(() => {
+    // Load user data from localStorage
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    if (storedUser.name) {
+      setUser({
+        name: storedUser.name,
+        district: storedUser.district || "Your District",
+        districtId: storedUser.districtId || 1,
+        crop: storedUser.crop || "Crop",
+        cropId: storedUser.cropId || null
+      });
+    }
+
+    // Fetch weather data
+    const fetchWeatherData = async () => {
+      try {
+        setLoading(true);
+        const districtId = storedUser.districtId || 1;
+
+        // Fetch current weather
+        const weatherResponse = await dataService.getWeather(districtId);
+        if (weatherResponse.success && weatherResponse.data) {
+          setWeatherData(weatherResponse.data);
+        }
+
+        // Fetch weather alerts
+        const alertsResponse = await dataService.getWeatherAlerts(districtId);
+        if (alertsResponse.success && alertsResponse.data) {
+          setWeatherAlerts(alertsResponse.data);
+        }
+      } catch (err) {
+        console.error("Error fetching weather:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Fetch market prices
+    const fetchMarketPrices = async () => {
+      try {
+        setPricesLoading(true);
+        const response = await dataService.getMarketPrices();
+        if (response.success && response.data) {
+          // Get latest 3 prices
+          setMarketPrices(response.data.slice(0, 3));
+        }
+      } catch (err) {
+        console.error("Error fetching market prices:", err);
+      } finally {
+        setPricesLoading(false);
+      }
+    };
+
+    fetchWeatherData();
+    fetchMarketPrices();
+  }, []);
+
+  // Extract weather values
+  const temperature = weatherData?.main?.temp ? Math.round(weatherData.main.temp) : "--";
+  const humidity = weatherData?.main?.humidity ? Math.round(weatherData.main.humidity) : "--";
+  const weatherDescription = weatherData?.weather?.[0]?.description || "Loading...";
+  const weatherMain = weatherData?.weather?.[0]?.main || "";
+
+  // Get temperature status
+  const getTempStatus = (temp) => {
+    if (temp === "--") return { label: "Loading...", color: "bg-gray-400" };
+    if (temp >= 35) return { label: "Hot", color: "bg-red-500" };
+    if (temp >= 28) return { label: "Good", color: "bg-green-500" };
+    if (temp >= 20) return { label: "Moderate", color: "bg-orange-400" };
+    return { label: "Cool", color: "bg-blue-500" };
+  };
+
+  // Get humidity status
+  const getHumidityStatus = (hum) => {
+    if (hum === "--") return { label: "Loading...", color: "bg-gray-400" };
+    if (hum >= 80) return { label: "Risky", color: "bg-orange-500" };
+    if (hum >= 60) return { label: "Normal", color: "bg-orange-400" };
+    return { label: "Good", color: "bg-green-500" };
+  };
+
+  // Get rainfall chance from weather condition
+  const getRainfallChance = () => {
+    if (!weatherMain) return { chance: "--", label: "Loading...", color: "bg-gray-400", description: "" };
+    const main = weatherMain.toLowerCase();
+    if (main.includes("rain") || main.includes("drizzle")) {
+      return { chance: "High", label: "Expected", color: "bg-blue-500", description: weatherDescription };
+    }
+    if (main.includes("thunderstorm")) {
+      return { chance: "Very High", label: "Storm", color: "bg-red-500", description: weatherDescription };
+    }
+    if (main.includes("cloud")) {
+      return { chance: "Low", label: "Normal", color: "bg-orange-400", description: weatherDescription };
+    }
+    return { chance: "None", label: "Clear", color: "bg-green-500", description: weatherDescription };
+  };
+
+  // Get crop emoji
+  const getCropEmoji = (cropName) => {
+    const name = (cropName || "").toLowerCase();
+    if (name.includes("tomato")) return "🍅";
+    if (name.includes("carrot")) return "🥕";
+    if (name.includes("rice") || name.includes("paddy")) return "🌾";
+    if (name.includes("potato")) return "🥔";
+    if (name.includes("onion")) return "🧅";
+    if (name.includes("cabbage")) return "🥬";
+    if (name.includes("chili") || name.includes("pepper")) return "🌶️";
+    if (name.includes("corn") || name.includes("maize")) return "🌽";
+    if (name.includes("bean")) return "🫘";
+    if (name.includes("banana")) return "🍌";
+    return "🌱";
+  };
+
+  // Get emoji background color
+  const getEmojiBackground = (cropName) => {
+    const name = (cropName || "").toLowerCase();
+    if (name.includes("tomato")) return "bg-red-100";
+    if (name.includes("carrot")) return "bg-orange-100";
+    if (name.includes("rice") || name.includes("paddy")) return "bg-yellow-100";
+    if (name.includes("potato")) return "bg-amber-100";
+    if (name.includes("onion")) return "bg-purple-100";
+    if (name.includes("cabbage")) return "bg-green-100";
+    if (name.includes("chili") || name.includes("pepper")) return "bg-red-100";
+    return "bg-green-100";
+  };
+
+  const tempStatus = getTempStatus(temperature);
+  const humidityStatus = getHumidityStatus(humidity);
+  const rainfallInfo = getRainfallChance();
+
+  // Get first high-priority alert for AI Advisory
+  const urgentAlert = weatherAlerts.find(a => a.severity === "HIGH" || a.severity === "CRITICAL") || weatherAlerts[0];
+
+  // Generate crop-specific AI advice based on weather and user's crop
+  const generateCropAdvice = () => {
+    if (!weatherData) return null;
+
+    const cropName = (user.crop || "").toLowerCase();
+    const temp = temperature;
+    const hum = humidity;
+    const weather = weatherMain.toLowerCase();
+    const season = currentSeason.name;
+    const windSpeed = weatherData?.wind?.speed ? Math.round(weatherData.wind.speed * 3.6) : 0; // Convert to km/h
+
+    let adviceTitle = "";
+    let adviceMessage = "";
+    let recommendations = [];
+    let priority = "normal"; // normal, medium, high
+
+    // === CRITICAL CONDITIONS (Check First) ===
+
+    // Strong Wind Alert (applies to all crops)
+    if (windSpeed >= 40) {
+      adviceTitle = "⚠️ Strong Wind Warning";
+      adviceMessage = `Wind speeds of ${windSpeed} km/h detected. This can cause significant damage to crops and farm structures.`;
+      recommendations = [
+        "Secure all farm equipment and structures",
+        "Provide support stakes for tall crops",
+        "Delay any spraying activities",
+        "Check irrigation systems after wind subsides"
+      ];
+      priority = "high";
+      return { title: adviceTitle, message: adviceMessage, recommendations, priority };
+    }
+
+    // Thunderstorm Alert (applies to all crops)
+    if (weather.includes("thunderstorm")) {
+      adviceTitle = "⛈️ Thunderstorm Alert";
+      adviceMessage = `Thunderstorm conditions detected in ${user.district || 'your area'}. Take immediate precautions to protect crops and livestock.`;
+      recommendations = [
+        "Move livestock to sheltered areas",
+        "Ensure proper drainage in fields",
+        "Stay indoors and avoid field work",
+        "Disconnect electrical equipment"
+      ];
+      priority = "high";
+      return { title: adviceTitle, message: adviceMessage, recommendations, priority };
+    }
+
+    // === PADDY/RICE SPECIFIC RULES ===
+    if (cropName.includes("rice") || cropName.includes("paddy")) {
+      // Pest Risk based on humidity and temperature combination
+      if (hum >= 75 && temp >= 25 && temp <= 30) {
+        adviceTitle = "🐛 Brown Plant Hopper Risk - Paddy";
+        adviceMessage = `Current conditions (${temp}°C, ${hum}% humidity) are ideal for Brown Plant Hopper (BPH) breeding. This is a major paddy pest in ${season} season.`;
+        recommendations = [
+          "Scout lower plant canopy for BPH nymphs",
+          "Avoid excessive nitrogen fertilizer",
+          "Maintain alternate wetting and drying (AWD)",
+          "Consider neem-based treatments if infestation detected"
+        ];
+        priority = "high";
+      }
+      // Blast Disease Risk
+      else if (hum >= 85 && temp >= 20 && temp <= 28) {
+        adviceTitle = "🍂 Rice Blast Disease Risk";
+        adviceMessage = `High humidity (${hum}%) with moderate temperature (${temp}°C) creates favorable conditions for Rice Blast fungus during ${season} season.`;
+        recommendations = [
+          "Inspect leaves for diamond-shaped lesions",
+          "Reduce nitrogen application",
+          "Apply Tricyclazole fungicide preventively",
+          "Ensure adequate field drainage"
+        ];
+        priority = "high";
+      }
+      // Maha Season - Rainfall concerns
+      else if (season === "Maha" && weather.includes("rain")) {
+        adviceTitle = "🌧️ Rainfall Advisory - Maha Season";
+        adviceMessage = `${weatherDescription} during Maha season. Monitor water levels to prevent waterlogging which can damage paddy root systems.`;
+        recommendations = [
+          "Check and clear drainage channels",
+          "Maintain bund height at 15-20cm",
+          "Delay top-dressing fertilizer",
+          "Monitor for lodging in mature crops"
+        ];
+        priority = "medium";
+      }
+      // Yala Season - Heat and water stress
+      else if (season === "Yala" && temp >= 35) {
+        adviceTitle = "🌡️ Heat Stress Alert - Yala Season";
+        adviceMessage = `High temperature (${temp}°C) during Yala season can cause spikelet sterility and reduce grain filling. Irrigation is critical.`;
+        recommendations = [
+          "Maintain 5-7cm water depth in fields",
+          "Irrigate during early morning or evening",
+          "Consider flash flooding during peak heat",
+          "Monitor flowering stage crops closely"
+        ];
+        priority = "high";
+      }
+      // Good conditions for paddy
+      else {
+        adviceTitle = "✅ Good Paddy Growing Conditions";
+        adviceMessage = `Weather conditions (${temp}°C, ${hum}% humidity) are favorable for paddy cultivation during ${season} season in ${user.district || 'your district'}.`;
+        recommendations = [
+          "Continue regular crop management",
+          "Monitor water levels daily",
+          "Scout for pests and diseases weekly",
+          "Follow fertilizer schedule"
+        ];
+        priority = "normal";
+      }
+    }
+    // === VEGETABLE CROPS (Tomato, Chili, Pepper, Beans) ===
+    else if (cropName.includes("tomato") || cropName.includes("chili") || cropName.includes("pepper") || cropName.includes("bean")) {
+      // Late Blight Risk for tomatoes
+      if (cropName.includes("tomato") && hum >= 80 && temp >= 18 && temp <= 24) {
+        adviceTitle = "🍂 Late Blight Risk - Tomato";
+        adviceMessage = `Cool temperatures (${temp}°C) with high humidity (${hum}%) are ideal for Late Blight (Phytophthora infestans). Act quickly to prevent crop loss.`;
+        recommendations = [
+          "Apply Mancozeb or copper-based fungicide",
+          "Remove and destroy infected leaves",
+          "Improve air circulation between plants",
+          "Avoid overhead irrigation"
+        ];
+        priority = "high";
+      }
+      // Fruit Set Issues in heat
+      else if (temp >= 35) {
+        adviceTitle = "🌡️ Poor Fruit Set Warning";
+        adviceMessage = `High temperature (${temp}°C) can cause flower drop and poor fruit set in ${user.crop}. Pollen viability decreases above 32°C.`;
+        recommendations = [
+          "Install 50% shade nets",
+          "Apply mulch to cool root zone",
+          "Irrigate twice daily in small amounts",
+          "Consider foliar spray of calcium"
+        ];
+        priority = "medium";
+      }
+      // Rain damage
+      else if (weather.includes("rain")) {
+        adviceTitle = "🌧️ Rain Protection Needed";
+        adviceMessage = `Rainfall can cause flower damage and increase disease pressure in ${user.crop}. Take protective measures.`;
+        recommendations = [
+          "Stake and tie plants properly",
+          "Apply preventive fungicide after rain",
+          "Remove waterlogged fruits immediately",
+          "Improve bed drainage"
+        ];
+        priority = "medium";
+      }
+      // Good conditions
+      else {
+        adviceTitle = "✅ Favorable Growing Conditions";
+        adviceMessage = `Weather is suitable for ${user.crop} cultivation. Temperature ${temp}°C and ${hum}% humidity are within optimal range.`;
+        recommendations = [
+          "Continue regular watering schedule",
+          "Apply balanced fertilizer weekly",
+          "Monitor for aphids and whiteflies",
+          "Harvest ripe fruits promptly"
+        ];
+        priority = "normal";
+      }
+    }
+    // === ROOT CROPS (Potato, Carrot, Onion) ===
+    else if (cropName.includes("potato") || cropName.includes("carrot") || cropName.includes("onion")) {
+      if (weather.includes("rain") && hum >= 80) {
+        adviceTitle = "⚠️ Root Rot Risk";
+        adviceMessage = `Wet conditions (${weatherDescription}, ${hum}% humidity) increase the risk of root rot diseases in ${user.crop}.`;
+        recommendations = [
+          "Ensure raised bed planting",
+          "Check drainage channels",
+          "Apply Trichoderma-based bio-fungicide",
+          "Avoid walking in wet fields"
+        ];
+        priority = "high";
+      } else if (hum >= 85) {
+        adviceTitle = "🧅 Storage Disease Risk";
+        adviceMessage = `High humidity (${hum}%) can affect post-harvest quality and storage life of ${user.crop}.`;
+        recommendations = [
+          "Cure harvested produce properly",
+          "Ensure good ventilation in storage",
+          "Sort and remove damaged produce",
+          "Consider early harvest if maturity allows"
+        ];
+        priority = "medium";
+      } else {
+        adviceTitle = "✅ Good Growing Conditions";
+        adviceMessage = `Current conditions (${temp}°C, ${hum}% humidity) are suitable for ${user.crop} cultivation.`;
+        recommendations = [
+          "Maintain consistent soil moisture",
+          "Hill up soil around plants",
+          "Monitor for pest damage",
+          "Plan harvest timing based on maturity"
+        ];
+        priority = "normal";
+      }
+    }
+    // === DEFAULT RULES FOR ANY CROP ===
+    else {
+      // Extreme heat warning
+      if (temp >= 38) {
+        adviceTitle = "🔥 Extreme Heat Warning";
+        adviceMessage = `Very high temperature (${temp}°C) can cause heat stress to most crops. Take immediate protective action.`;
+        recommendations = [
+          "Increase irrigation frequency",
+          "Apply mulch to reduce soil temperature",
+          "Provide temporary shade if possible",
+          "Avoid field work during peak heat (11am-3pm)"
+        ];
+        priority = "high";
+      }
+      // Heavy rain
+      else if (weather.includes("rain") && weather.includes("heavy")) {
+        adviceTitle = "🌧️ Heavy Rain Advisory";
+        adviceMessage = `Heavy rainfall expected. Check all drainage and protect vulnerable crops.`;
+        recommendations = [
+          "Clear drainage channels",
+          "Harvest mature crops if possible",
+          "Stake tall plants",
+          "Apply fungicide after rain stops"
+        ];
+        priority = "high";
+      }
+      // High humidity pest risk
+      else if (hum >= 85) {
+        adviceTitle = "🐛 Pest & Disease Alert";
+        adviceMessage = `High humidity (${hum}%) creates favorable conditions for pests and fungal diseases. Increase monitoring.`;
+        recommendations = [
+          "Scout crops daily for pest symptoms",
+          "Ensure good plant spacing for airflow",
+          "Apply preventive organic treatments",
+          "Remove any infected plant material"
+        ];
+        priority = "medium";
+      }
+      // Moderate rain
+      else if (weather.includes("rain") || weather.includes("drizzle")) {
+        adviceTitle = "🌦️ Light Rain Expected";
+        adviceMessage = `${weatherDescription} in ${user.district || 'your area'}. Good for natural irrigation but monitor for excess moisture.`;
+        recommendations = [
+          "Reduce manual irrigation",
+          "Check drainage is functioning",
+          "Delay fertilizer application",
+          "Plan spraying for dry periods"
+        ];
+        priority = "normal";
+      }
+      // Good general conditions
+      else {
+        adviceTitle = "✅ Favorable Farming Conditions";
+        adviceMessage = `Weather in ${user.district || 'your district'} (${temp}°C, ${hum}% humidity, ${weatherDescription}) is good for general farming activities during ${season} season.`;
+        recommendations = [
+          "Continue regular crop care",
+          "This is a good time for fertilizer application",
+          "Suitable conditions for spraying",
+          "Monitor crop health and plan ahead"
+        ];
+        priority = "normal";
+      }
+    }
+
+    return { title: adviceTitle, message: adviceMessage, recommendations, priority };
+  };
+
+  const cropAdvice = generateCropAdvice();
+
   return (
     <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
       {/* Dashboard Navbar */}
@@ -14,19 +439,20 @@ export default function DashboardPage() {
         {/* Greeting Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="animate-fade-in-left">
-            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, Sunil!</h1>
+            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, {user.name?.split(' ')[0] || 'Farmer'}!</h1>
             <p className="text-gray-500 text-sm">
-              Here is your farming overview for today, <span className="text-primary font-medium">Tuesday, 24 Oct.</span>
+              Here is your farming overview for today, <span className="text-primary font-medium">{dateString}.</span>
             </p>
           </div>
           <div className="flex gap-2 mt-3 md:mt-0 animate-fade-in-right delay-100">
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
               <span className="material-symbols-outlined text-sm text-gray-500">location_on</span>
-              Polonnaruwa
+              {user.district || "Your District"}
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
-              <span className="material-symbols-outlined text-sm text-amber-500">star</span>
-              Paddy - Yala Season
+              <span className="material-symbols-outlined text-sm text-amber-500">{currentSeason.icon === 'sunny' ? 'wb_sunny' : 'water_drop'}</span>
+              <span>{user.crop || "Crop"}</span>
+              <span className="text-primary font-medium">• {currentSeason.name} Season</span>
             </div>
           </div>
         </div>
@@ -42,8 +468,12 @@ export default function DashboardPage() {
               <div className="flex-1">
                 <p className="text-gray-500 text-xs">Temperature</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-[#131613]">32°C</span>
-                  <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-medium rounded-full">Good</span>
+                  <span className="text-xl font-bold text-[#131613]">
+                    {loading ? "--" : `${temperature}°C`}
+                  </span>
+                  <span className={`px-2 py-0.5 ${tempStatus.color} text-white text-[10px] font-medium rounded-full`}>
+                    {loading ? "Loading" : tempStatus.label}
+                  </span>
                 </div>
               </div>
             </div>
@@ -58,9 +488,15 @@ export default function DashboardPage() {
               <div className="flex-1">
                 <p className="text-gray-500 text-xs">Rainfall Chance</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-[#131613]">60%</span>
-                  <span className="px-2 py-0.5 bg-orange-400 text-white text-[10px] font-medium rounded-full">Normal</span>
-                  <span className="text-gray-400 text-[10px]">Light Showers</span>
+                  <span className="text-xl font-bold text-[#131613]">
+                    {loading ? "--" : rainfallInfo.chance}
+                  </span>
+                  <span className={`px-2 py-0.5 ${rainfallInfo.color} text-white text-[10px] font-medium rounded-full`}>
+                    {loading ? "Loading" : rainfallInfo.label}
+                  </span>
+                  {rainfallInfo.description && (
+                    <span className="text-gray-400 text-[10px] capitalize">{rainfallInfo.description}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -75,8 +511,12 @@ export default function DashboardPage() {
               <div className="flex-1">
                 <p className="text-gray-500 text-xs">Humidity</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-[#131613]">78%</span>
-                  <span className="px-2 py-0.5 bg-orange-500 text-white text-[10px] font-medium rounded-full">Risky</span>
+                  <span className="text-xl font-bold text-[#131613]">
+                    {loading ? "--" : `${humidity}%`}
+                  </span>
+                  <span className={`px-2 py-0.5 ${humidityStatus.color} text-white text-[10px] font-medium rounded-full`}>
+                    {loading ? "Loading" : humidityStatus.label}
+                  </span>
                 </div>
               </div>
             </div>
@@ -91,12 +531,24 @@ export default function DashboardPage() {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-lg animate-pulse-subtle">add</span>
-                  <span className="font-semibold text-sm text-[#131613]">AI Advisory Highlight</span>
+                  <span className="material-symbols-outlined text-primary text-lg animate-pulse-subtle">psychology</span>
+                  <span className="font-semibold text-sm text-[#131613]">AI Advisory • {currentSeason.name} Season</span>
                 </div>
-                <span className="px-2.5 py-1 bg-red-50 text-red-500 text-[10px] font-medium rounded-full border border-red-200 animate-pulse">
-                  Urgent Action
-                </span>
+                {cropAdvice?.priority === "high" && (
+                  <span className="px-2.5 py-1 bg-red-50 text-red-500 text-[10px] font-medium rounded-full border border-red-200 animate-pulse">
+                    Urgent Action
+                  </span>
+                )}
+                {cropAdvice?.priority === "medium" && (
+                  <span className="px-2.5 py-1 bg-orange-50 text-orange-500 text-[10px] font-medium rounded-full border border-orange-200">
+                    Attention Required
+                  </span>
+                )}
+                {cropAdvice?.priority === "normal" && (
+                  <span className="px-2.5 py-1 bg-green-50 text-green-600 text-[10px] font-medium rounded-full border border-green-200">
+                    All Good
+                  </span>
+                )}
               </div>
 
               {/* Content */}
@@ -104,7 +556,9 @@ export default function DashboardPage() {
                 {/* Image */}
                 <div className="md:w-[40%] h-48 md:h-auto overflow-hidden">
                   <img
-                    src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                    src={cropAdvice?.priority === "high"
+                      ? "https://images.unsplash.com/photo-1499529112087-3cb3b73cec95?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                      : "https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"}
                     alt="Crop field"
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
                   />
@@ -112,27 +566,53 @@ export default function DashboardPage() {
 
                 {/* Text Content */}
                 <div className="flex-1 p-4">
-                  <h3 className="text-lg font-bold text-[#131613] mb-2">High Pest Risk Detected</h3>
-                  <p className="text-gray-500 text-xs leading-relaxed mb-4">
-                    Based on the recent humidity levels of 78% and consistent cloud cover, our models predict a high risk of Brown Plant Hopper infestation in your area.
-                  </p>
+                  {loading ? (
+                    <div className="animate-pulse">
+                      <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
+                      <div className="h-16 bg-amber-50 rounded mb-4"></div>
+                    </div>
+                  ) : cropAdvice ? (
+                    <>
+                      <h3 className="text-lg font-bold text-[#131613] mb-2">
+                        {cropAdvice.title}
+                      </h3>
+                      <p className="text-gray-500 text-xs leading-relaxed mb-4">
+                        {cropAdvice.message}
+                      </p>
 
-                  {/* Recommended Action */}
-                  <div className="bg-amber-50 border-l-3 border-amber-400 p-3 rounded-r mb-4">
-                    <p className="text-xs text-gray-700">
-                      <span className="text-amber-600 font-semibold">Recommended Action:</span> Apply organic neem spray within the next 24 hours to prevent outbreak spread. Monitor water levels closely.
-                    </p>
-                  </div>
+                      {/* Recommended Action */}
+                      {cropAdvice.recommendations && cropAdvice.recommendations.length > 0 && (
+                        <div className={`border-l-3 p-3 rounded-r mb-4 ${cropAdvice.priority === "high" ? "bg-red-50 border-red-400" :
+                          cropAdvice.priority === "medium" ? "bg-amber-50 border-amber-400" :
+                            "bg-green-50 border-green-400"
+                          }`}>
+                          <p className="text-xs text-gray-700">
+                            <span className={`font-semibold ${cropAdvice.priority === "high" ? "text-red-600" :
+                              cropAdvice.priority === "medium" ? "text-amber-600" :
+                                "text-green-600"
+                              }`}>Recommended Actions: </span>
+                            {cropAdvice.recommendations.join(". ")}.
+                          </p>
+                        </div>
+                      )}
 
-                  {/* Buttons */}
-                  <div className="flex gap-3">
-                    <Link to="/crop-risk" className="px-4 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg btn-hover">
-                      Read Full Analysis
-                    </Link>
-                    <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                      Dismiss
-                    </button>
-                  </div>
+                      {/* Buttons */}
+                      <div className="flex gap-3">
+                        <Link to="/crop-risk" className="px-4 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg btn-hover">
+                          Read Full Analysis
+                        </Link>
+                        <Link to="/weather" className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                          View Weather Details
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">cloud_done</span>
+                      <p className="text-gray-500 text-sm">Weather data loading...</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -180,41 +660,38 @@ export default function DashboardPage() {
               </div>
 
               <div className="space-y-3">
-                {/* Tomato */}
-                <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
-                  <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span className="text-lg">🍅</span>
+                {pricesLoading ? (
+                  <div className="animate-pulse space-y-3">
+                    {[1, 2].map(i => (
+                      <div key={i} className="flex items-center gap-3 p-2">
+                        <div className="w-9 h-9 rounded-full bg-gray-200"></div>
+                        <div className="flex-1">
+                          <div className="h-3 bg-gray-200 rounded w-16 mb-1"></div>
+                          <div className="h-2 bg-gray-200 rounded w-20"></div>
+                        </div>
+                        <div className="h-4 bg-gray-200 rounded w-14"></div>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-[#131613]">Tomato</p>
-                    <p className="text-[10px] text-gray-400">Dambulla Market</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-[#131613]">Rs. 180</p>
-                    <p className="text-[10px] text-green-500 flex items-center gap-0.5">
-                      <span className="material-symbols-outlined text-xs">trending_up</span>
-                      +5%
-                    </p>
-                  </div>
-                </div>
-
-                {/* Carrot */}
-                <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
-                  <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span className="text-lg">🥕</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-[#131613]">Carrot</p>
-                    <p className="text-[10px] text-gray-400">Nuwara Eliya</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-[#131613]">Rs. 220</p>
-                    <p className="text-[10px] text-red-500 flex items-center gap-0.5">
-                      <span className="material-symbols-outlined text-xs">trending_down</span>
-                      -2%
-                    </p>
-                  </div>
-                </div>
+                ) : marketPrices.length === 0 ? (
+                  <p className="text-gray-400 text-xs text-center py-4">No market data available</p>
+                ) : (
+                  marketPrices.slice(0, 2).map((price, index) => (
+                    <div key={price.id || index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
+                      <div className={`w-9 h-9 rounded-full ${getEmojiBackground(price.cropName)} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                        <span className="text-lg">{getCropEmoji(price.cropName)}</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-[#131613]">{price.cropName}</p>
+                        <p className="text-[10px] text-gray-400">{price.districtName || "Local Market"}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-[#131613]">Rs. {price.price?.toLocaleString()}</p>
+                        <p className="text-[10px] text-gray-400">/kg</p>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

@@ -1,18 +1,125 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
+import dataService from "../services/dataService";
 
 export default function WeatherPage() {
-    const forecast = [
-        { day: "Today", icon: "sunny", high: 24, low: 18 },
-        { day: "Wed", icon: "rainy", high: 22, low: 17 },
-        { day: "Thu", icon: "partly_cloudy_day", high: 21, low: 16 },
-        { day: "Fri", icon: "cloud", high: 26, low: 19 },
-        { day: "Sat", icon: "sunny", high: 27, low: 20 },
-        { day: "Sun", icon: "partly_cloudy_day", high: 23, low: 18 },
-        { day: "Mon", icon: "sunny", high: 22, low: 18 },
-    ];
+    const [weatherData, setWeatherData] = useState(null);
+    const [forecast, setForecast] = useState([]);
+    const [weatherAlerts, setWeatherAlerts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [forecastLoading, setForecastLoading] = useState(true);
+    const [alertsLoading, setAlertsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Get user's districtId from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const districtId = user.districtId || 1; // Default to 1 if not set
+
+    useEffect(() => {
+        const fetchAllWeatherData = async () => {
+            // Fetch current weather
+            try {
+                setLoading(true);
+                const response = await dataService.getWeather(districtId);
+                if (response.success && response.data) {
+                    setWeatherData(response.data);
+                }
+            } catch (err) {
+                console.error("Error fetching weather:", err);
+                setError("Failed to fetch weather data");
+            } finally {
+                setLoading(false);
+            }
+
+            // Fetch 7-day forecast
+            try {
+                setForecastLoading(true);
+                const forecastResponse = await dataService.getForecast(districtId);
+                if (forecastResponse.success && forecastResponse.data) {
+                    setForecast(forecastResponse.data);
+                }
+            } catch (err) {
+                console.error("Error fetching forecast:", err);
+            } finally {
+                setForecastLoading(false);
+            }
+
+            // Fetch weather alerts
+            try {
+                setAlertsLoading(true);
+                const alertsResponse = await dataService.getWeatherAlerts(districtId);
+                if (alertsResponse.success && alertsResponse.data) {
+                    setWeatherAlerts(alertsResponse.data);
+                }
+            } catch (err) {
+                console.error("Error fetching alerts:", err);
+            } finally {
+                setAlertsLoading(false);
+            }
+        };
+
+        fetchAllWeatherData();
+    }, [districtId]);
+
+    // Helper function to get wind direction from degrees
+    const getWindDirection = (deg) => {
+        if (deg === undefined) return "N/A";
+        const directions = ['North', 'North-East', 'East', 'South-East', 'South', 'South-West', 'West', 'North-West'];
+        const index = Math.round(deg / 45) % 8;
+        return directions[index];
+    };
+
+    // Helper function to get humidity description
+    const getHumidityDescription = (humidity) => {
+        if (humidity >= 80) return "High moisture";
+        if (humidity >= 60) return "Moderate moisture";
+        if (humidity >= 40) return "Normal moisture";
+        return "Low moisture";
+    };
+
+    // Helper function to get icon color class
+    const getIconColor = (icon) => {
+        switch (icon) {
+            case 'sunny': return 'text-amber-400 animate-pulse-subtle';
+            case 'rainy': return 'text-blue-400';
+            case 'cloud': return 'text-gray-400';
+            case 'thunderstorm': return 'text-purple-500';
+            case 'ac_unit': return 'text-cyan-400';
+            case 'foggy': return 'text-gray-300';
+            default: return 'text-orange-300';
+        }
+    };
+
+    // Helper function to get alert background color
+    const getAlertBgColor = (severity) => {
+        switch (severity) {
+            case 'HIGH':
+            case 'CRITICAL': return 'bg-red-500';
+            case 'MEDIUM': return 'bg-orange-400';
+            case 'LOW': return 'bg-green-500';
+            default: return 'bg-gray-400';
+        }
+    };
+
+    // Helper to format alert type for display
+    const formatAlertType = (alertType) => {
+        return alertType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    };
+
+    // Extract weather values
+    const temperature = weatherData?.main?.temp ? Math.round(weatherData.main.temp) : "--";
+    const humidity = weatherData?.main?.humidity || "--";
+    const windSpeed = weatherData?.wind?.speed ? Math.round(weatherData.wind.speed * 3.6) : "--"; // Convert m/s to km/h
+    const windDeg = weatherData?.wind?.deg;
+    const weatherDescription = weatherData?.weather?.[0]?.description || "Loading...";
+    const weatherMain = weatherData?.weather?.[0]?.main || "";
+
+    // Get current date
+    const today = new Date();
+    const dateString = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const dayString = today.toLocaleDateString('en-US', { weekday: 'long' });
 
     return (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
@@ -35,18 +142,22 @@ export default function WeatherPage() {
                         <div className="relative z-10 p-6 h-full flex flex-col justify-between">
                             <div className="flex justify-between items-start animate-fade-in-down delay-100">
                                 <div>
-                                    <h1 className="text-5xl font-bold text-white mb-1">24°C</h1>
-                                    <p className="text-white text-lg font-medium">Partly Cloudy</p>
+                                    <h1 className="text-5xl font-bold text-white mb-1">
+                                        {loading ? "--" : `${temperature}°C`}
+                                    </h1>
+                                    <p className="text-white text-lg font-medium capitalize">
+                                        {loading ? "Loading..." : weatherDescription}
+                                    </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-white text-sm font-medium">Oct 24, 2023</p>
-                                    <p className="text-white/70 text-xs">Tuesday</p>
+                                    <p className="text-white text-sm font-medium">{dateString}</p>
+                                    <p className="text-white/70 text-xs">{dayString}</p>
                                 </div>
                             </div>
 
                             <div className="animate-fade-in-up delay-200">
                                 <p className="text-white/80 text-xs mb-4 max-w-md">
-                                    Current conditions in Nuwara Eliya. Moderate winds from the NW. Ideal conditions for afternoon tea plucking.
+                                    Current conditions in your district. {windDeg !== undefined ? `Winds from ${getWindDirection(windDeg)}.` : ''} Weather data updated in real-time.
                                 </p>
                                 <div className="flex gap-2">
                                     <button className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
@@ -69,8 +180,12 @@ export default function WeatherPage() {
                                 <span className="material-symbols-outlined text-xs">humidity_percentage</span>
                                 Humidity
                             </div>
-                            <p className="text-xl font-bold text-[#131613]">82%</p>
-                            <p className="text-[10px] text-gray-400">High moisture</p>
+                            <p className="text-xl font-bold text-[#131613]">
+                                {loading ? "--" : `${humidity}%`}
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                                {loading ? "Loading..." : getHumidityDescription(humidity)}
+                            </p>
                         </div>
 
                         {/* Wind */}
@@ -79,28 +194,40 @@ export default function WeatherPage() {
                                 <span className="material-symbols-outlined text-xs">air</span>
                                 Wind
                             </div>
-                            <p className="text-xl font-bold text-[#131613]">15 <span className="text-sm font-normal">km/h</span></p>
-                            <p className="text-[10px] text-gray-400">North-West</p>
+                            <p className="text-xl font-bold text-[#131613]">
+                                {loading ? "--" : windSpeed} <span className="text-sm font-normal">km/h</span>
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                                {loading ? "Loading..." : getWindDirection(windDeg)}
+                            </p>
                         </div>
 
-                        {/* Precipitation */}
+                        {/* Precipitation - Note: OpenWeatherMap free tier doesn't provide precipitation probability */}
                         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 hover:shadow-md transition-all duration-300 hover:-translate-y-1 animate-fade-in-up delay-300">
                             <div className="flex items-center gap-1 text-gray-400 text-[10px] mb-1">
                                 <span className="material-symbols-outlined text-xs">water_drop</span>
                                 Precipitation
                             </div>
-                            <p className="text-xl font-bold text-[#131613]">10%</p>
-                            <p className="text-[10px] text-gray-400">Low chance</p>
+                            <p className="text-xl font-bold text-[#131613]">
+                                {loading ? "--" : (weatherMain.toLowerCase().includes('rain') ? "High" : "Low")}
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                                {loading ? "Loading..." : (weatherMain.toLowerCase().includes('rain') ? "Rain expected" : "No rain expected")}
+                            </p>
                         </div>
 
-                        {/* UV Index */}
+                        {/* UV Index - Note: OpenWeatherMap free tier doesn't provide UV index, showing feels_like instead */}
                         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 hover:shadow-md transition-all duration-300 hover:-translate-y-1 animate-fade-in-up delay-400">
                             <div className="flex items-center gap-1 text-gray-400 text-[10px] mb-1">
                                 <span className="material-symbols-outlined text-xs">sunny</span>
-                                UV Index
+                                Feels Like
                             </div>
-                            <p className="text-xl font-bold text-[#131613]">6.0</p>
-                            <p className="text-[10px] text-gray-400">Moderate</p>
+                            <p className="text-xl font-bold text-[#131613]">
+                                {loading ? "--" : `${Math.round(weatherData?.main?.feels_like || temperature)}°C`}
+                            </p>
+                            <p className="text-[10px] text-gray-400">
+                                {loading ? "Loading..." : "Apparent temperature"}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -116,21 +243,29 @@ export default function WeatherPage() {
                     </div>
 
                     <div className="grid grid-cols-7 gap-2">
-                        {forecast.map((day, index) => (
-                            <div
-                                key={index}
-                                className={`flex flex-col items-center p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 hover:scale-105 cursor-pointer ${index === 0 ? 'bg-gray-50 border border-gray-200 shadow-sm' : ''}`}
-                                style={{ animation: `fade-in-up 0.5s ease-out ${index * 100}ms backwards` }}
-                            >
-                                <span className="text-xs font-medium text-gray-600 mb-2">{day.day}</span>
-                                <span className={`material-symbols-outlined text-2xl mb-2 ${day.icon === 'sunny' ? 'text-amber-400 animate-pulse-subtle' :
-                                    day.icon === 'rainy' ? 'text-blue-400' :
-                                        day.icon === 'cloud' ? 'text-gray-400' :
-                                            'text-orange-300'
-                                    }`}>{day.icon}</span>
-                                <p className="text-sm font-bold text-[#131613]">{day.high}°<span className="text-gray-400 font-normal">/{day.low}°</span></p>
+                        {forecastLoading ? (
+                            <div className="col-span-7 text-center py-8 text-gray-400">
+                                <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                                <p className="text-sm mt-2">Loading forecast...</p>
                             </div>
-                        ))}
+                        ) : forecast.length === 0 ? (
+                            <div className="col-span-7 text-center py-8 text-gray-400">
+                                <span className="material-symbols-outlined">cloud_off</span>
+                                <p className="text-sm mt-2">Forecast unavailable</p>
+                            </div>
+                        ) : (
+                            forecast.map((day, index) => (
+                                <div
+                                    key={index}
+                                    className={`flex flex-col items-center p-3 rounded-xl transition-all duration-300 hover:bg-gray-50 hover:scale-105 cursor-pointer ${index === 0 ? 'bg-gray-50 border border-gray-200 shadow-sm' : ''}`}
+                                    style={{ animation: `fade-in-up 0.5s ease-out ${index * 100}ms backwards` }}
+                                >
+                                    <span className="text-xs font-medium text-gray-600 mb-2">{day.day}</span>
+                                    <span className={`material-symbols-outlined text-2xl mb-2 ${getIconColor(day.icon)}`}>{day.icon}</span>
+                                    <p className="text-sm font-bold text-[#131613]">{day.high}°<span className="text-gray-400 font-normal">/{day.low}°</span></p>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
 
@@ -144,30 +279,48 @@ export default function WeatherPage() {
                         </div>
 
                         <div className="space-y-3">
-                            {/* Heavy Rainfall Warning */}
-                            <div className="bg-red-500 rounded-xl p-4 text-white shadow-md hover:shadow-lg transition-all hover:scale-[1.02]">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="material-symbols-outlined text-lg">thunderstorm</span>
-                                    <span className="text-sm font-semibold">Heavy Rainfall Warning</span>
+                            {alertsLoading ? (
+                                <div className="bg-gray-100 rounded-xl p-4 text-center">
+                                    <span className="material-symbols-outlined animate-spin text-gray-400">progress_activity</span>
+                                    <p className="text-sm mt-2 text-gray-500">Loading alerts...</p>
                                 </div>
-                                <p className="text-xs text-white/90 leading-relaxed mb-3">
-                                    Expected rainfall &gt;100mm in the next 24 hours. Risk of localized flooding in low-lying tea estates.
-                                </p>
-                                <span className="inline-block px-2 py-1 bg-white/20 text-[10px] font-medium rounded animate-pulse">
-                                    Until 6:00 PM Tomorrow
-                                </span>
-                            </div>
-
-                            {/* Landslide Watch */}
-                            <div className="bg-orange-400 rounded-xl p-4 text-white shadow-md hover:shadow-lg transition-all hover:scale-[1.02]">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <span className="material-symbols-outlined text-lg">landslide</span>
-                                    <span className="text-sm font-semibold">Landslide Watch</span>
+                            ) : weatherAlerts.length === 0 ? (
+                                <div className="bg-green-500 rounded-xl p-4 text-white">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="material-symbols-outlined text-lg">check_circle</span>
+                                        <span className="text-sm font-semibold">All Clear</span>
+                                    </div>
+                                    <p className="text-xs text-white/90">No weather alerts at this time.</p>
                                 </div>
-                                <p className="text-xs text-white/90 leading-relaxed">
-                                    Soil saturation levels are high. Be vigilant near steep slopes and cutting areas.
-                                </p>
-                            </div>
+                            ) : (
+                                weatherAlerts.map((alert, index) => (
+                                    <div
+                                        key={index}
+                                        className={`${getAlertBgColor(alert.severity)} rounded-xl p-4 text-white shadow-md hover:shadow-lg transition-all hover:scale-[1.02]`}
+                                        style={{ animation: `fade-in-up 0.3s ease-out ${index * 100}ms backwards` }}
+                                    >
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="material-symbols-outlined text-lg">{alert.icon || 'warning'}</span>
+                                            <span className="text-sm font-semibold">{formatAlertType(alert.alertType)}</span>
+                                        </div>
+                                        <p className="text-xs text-white/90 leading-relaxed mb-2">
+                                            {alert.message}
+                                        </p>
+                                        {alert.precautions && alert.precautions.length > 0 && (
+                                            <ul className="text-[10px] text-white/80 list-disc list-inside mb-2">
+                                                {alert.precautions.slice(0, 2).map((precaution, i) => (
+                                                    <li key={i}>{precaution}</li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                        {alert.validUntil && (
+                                            <span className="inline-block px-2 py-1 bg-white/20 text-[10px] font-medium rounded">
+                                                {alert.validUntil}
+                                            </span>
+                                        )}
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
 

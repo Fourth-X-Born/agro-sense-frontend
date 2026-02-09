@@ -1,8 +1,45 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import authService from "../services/authService";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.type]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.email || !formData.password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await authService.login(formData);
+      console.log("Login success:", response);
+
+      // Store user data/token
+      localStorage.setItem("user", JSON.stringify(response));
+
+      toast.success(`Welcome back, ${response.name || 'Farmer'}!`);
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Login failed", error);
+      toast.error(error.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="h-screen bg-[#f6f8f6] flex flex-col overflow-hidden">
@@ -66,7 +103,7 @@ export default function LoginPage() {
             </div>
 
             {/* Form */}
-            <form className="flex flex-col gap-3">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
               {/* Email */}
               <div className="flex flex-col gap-0.5">
                 <label className="text-[9px] font-medium text-[#131613]">Email</label>
@@ -74,6 +111,8 @@ export default function LoginPage() {
                   <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">mail</span>
                   <input
                     type="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     placeholder="e.g. person@gmail.com"
                     className="w-full h-8 pl-8 pr-3 rounded border border-gray-300 text-[10px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   />
@@ -87,6 +126,8 @@ export default function LoginPage() {
                   <span className="material-symbols-outlined absolute left-2 text-gray-400 text-sm">lock</span>
                   <input
                     type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
                     placeholder="Enter your password"
                     className="w-full h-8 pl-8 pr-8 rounded border border-gray-300 text-[10px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   />
@@ -112,10 +153,15 @@ export default function LoginPage() {
               {/* Login Button */}
               <button
                 type="submit"
-                className="w-full h-8 rounded bg-primary text-white text-[10px] font-medium flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors"
+                disabled={loading}
+                className="w-full h-8 rounded bg-primary text-white text-[10px] font-medium flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Login
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                {loading ? "Signing in..." : (
+                  <>
+                    Login
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </>
+                )}
               </button>
             </form>
 
@@ -127,7 +173,7 @@ export default function LoginPage() {
             </div>
 
             {/* Google Button */}
-            <button className="w-full h-8 rounded border border-gray-300 text-[10px] font-medium text-[#131613] flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors">
+            <button type="button" className="w-full h-8 rounded border border-gray-300 text-[10px] font-medium text-[#131613] flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors">
               <svg className="w-3 h-3" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />

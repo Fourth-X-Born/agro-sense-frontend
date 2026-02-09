@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import ricePlantImg from "../assets/images/rice-plant-white-background-vector-eps-10_638232-733-removebg-preview.png";
+import authService from "../services/authService";
+import masterDataService from "../services/masterDataService";
 
 export default function AuthPage() {
     const location = useLocation();
@@ -12,13 +15,17 @@ export default function AuthPage() {
     const [selectedDistrict, setSelectedDistrict] = useState("");
     const dropdownRef = useRef(null);
 
-    const districts = [
-        "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
-        "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
-        "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
-        "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
-        "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
-    ];
+    const [districts, setDistricts] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    // Form States
+    const [loginData, setLoginData] = useState({ identifier: "", password: "" });
+    const [registerData, setRegisterData] = useState({
+        name: "",
+        email: "",
+        password: "",
+        districtId: ""
+    });
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -27,22 +34,74 @@ export default function AuthPage() {
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
+
+        // Fetch Districts
+        const fetchDistricts = async () => {
+            try {
+                const data = await masterDataService.getDistricts();
+                setDistricts(data || []);
+            } catch (error) {
+                console.error("Failed to load districts", error);
+                // Fallback or silent fail
+            }
+        };
+        fetchDistricts();
+
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const switchToLogin = () => navigate("/login");
     const switchToRegister = () => navigate("/register");
 
-    const handleLogin = (e) => {
-        e.preventDefault();
-        // Simulate login - redirect to dashboard
-        navigate("/dashboard");
+    const handleLoginChange = (e) => {
+        setLoginData({ ...loginData, [e.target.name]: e.target.value });
     };
 
-    const handleRegister = (e) => {
+    // Specific change handler for Register inputs to ensure correct mapping
+    const handleRegisterInput = (field, value) => {
+        setRegisterData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // Simulate registration - redirect to dashboard
-        navigate("/dashboard");
+        if (!loginData.identifier || !loginData.password) {
+            toast.error("Please fill in email/phone and password");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await authService.login(loginData);
+            // The API returns { success: true, message: "...", data: { ...user } }
+            // We need to store the inner data object
+            const userData = response.data;
+            localStorage.setItem("user", JSON.stringify(userData));
+            toast.success(`Welcome back, ${userData.name || 'Farmer'}!`);
+            navigate("/dashboard");
+        } catch (error) {
+            toast.error(error.message || "Login failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        if (!registerData.name || !registerData.email || !registerData.password || !registerData.districtId) {
+            toast.error("Please fill in all fields including District");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await authService.register(registerData);
+            toast.success("Registration successful! Please login.");
+            navigate("/login");
+        } catch (error) {
+            toast.error(error.message || "Registration failed");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -189,14 +248,17 @@ export default function AuthPage() {
                             }`}>
                             {isLogin && (
                                 <form onSubmit={handleLogin} className="flex flex-col justify-center h-full gap-4">
-                                    {/* Email */}
+                                    {/* Identifier (Email or Phone) */}
                                     <div className="flex flex-col gap-1">
-                                        <label className="text-[11px] font-medium text-[#131613]">Email</label>
+                                        <label className="text-[11px] font-medium text-[#131613]">Email or Phone Number</label>
                                         <div className="relative">
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">mail</span>
                                             <input
-                                                type="email"
-                                                placeholder="e.g. person@gmail.com"
+                                                type="text"
+                                                name="identifier"
+                                                value={loginData.identifier}
+                                                onChange={handleLoginChange}
+                                                placeholder="e.g. person@gmail.com or 0771234567"
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
                                         </div>
@@ -209,6 +271,9 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 text-gray-400 text-base">lock</span>
                                             <input
                                                 type={showPassword ? "text" : "password"}
+                                                name="password"
+                                                value={loginData.password}
+                                                onChange={handleLoginChange}
                                                 placeholder="Enter your password"
                                                 className="w-full h-9 pl-9 pr-9 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
@@ -234,10 +299,15 @@ export default function AuthPage() {
                                     {/* Login Button */}
                                     <button
                                         type="submit"
-                                        className="w-full h-9 rounded-lg bg-primary text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors"
+                                        disabled={loading}
+                                        className="w-full h-9 rounded-lg bg-primary text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50"
                                     >
-                                        Login
-                                        <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                        {loading ? "Signing in..." : (
+                                            <>
+                                                Login
+                                                <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                            </>
+                                        )}
                                     </button>
                                 </form>
                             )}
@@ -257,6 +327,9 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">person</span>
                                             <input
                                                 type="text"
+                                                name="name"
+                                                value={registerData.name}
+                                                onChange={(e) => handleRegisterInput('name', e.target.value)}
                                                 placeholder="e.g. Sunil Perera"
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
@@ -283,14 +356,15 @@ export default function AuthPage() {
                                                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-40 overflow-y-auto">
                                                     {districts.map((district) => (
                                                         <div
-                                                            key={district}
+                                                            key={district.id}
                                                             onClick={() => {
-                                                                setSelectedDistrict(district);
+                                                                setSelectedDistrict(district.name);
+                                                                handleRegisterInput('districtId', district.id);
                                                                 setDistrictOpen(false);
                                                             }}
                                                             className="px-3 py-1.5 text-xs text-gray-700 hover:bg-primary/10 cursor-pointer"
                                                         >
-                                                            {district}
+                                                            {district.name}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -306,6 +380,9 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">mail</span>
                                             <input
                                                 type="email"
+                                                name="email"
+                                                value={registerData.email}
+                                                onChange={(e) => handleRegisterInput('email', e.target.value)}
                                                 placeholder="e.g. person@gmail.com"
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
@@ -319,6 +396,9 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 text-gray-400 text-base">lock</span>
                                             <input
                                                 type={showPassword ? "text" : "password"}
+                                                name="password"
+                                                value={registerData.password}
+                                                onChange={(e) => handleRegisterInput('password', e.target.value)}
                                                 placeholder="Create a secure password"
                                                 className="w-full h-9 pl-9 pr-9 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
@@ -337,10 +417,15 @@ export default function AuthPage() {
                                     {/* Register Button */}
                                     <button
                                         type="submit"
-                                        className="w-full h-9 mt-1 rounded-lg bg-primary text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors"
+                                        disabled={loading}
+                                        className="w-full h-9 mt-1 rounded-lg bg-primary text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50"
                                     >
-                                        Register Account
-                                        <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                        {loading ? "Creating Account..." : (
+                                            <>
+                                                Register Account
+                                                <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                            </>
+                                        )}
                                     </button>
                                 </form>
                             )}
@@ -355,7 +440,7 @@ export default function AuthPage() {
                     </div>
 
                     {/* Google Button */}
-                    <button className="w-full h-9 rounded-lg border border-gray-300 text-xs font-medium text-[#131613] flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
+                    <button type="button" className="w-full h-9 rounded-lg border border-gray-300 text-xs font-medium text-[#131613] flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
                         <svg className="w-4 h-4" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />

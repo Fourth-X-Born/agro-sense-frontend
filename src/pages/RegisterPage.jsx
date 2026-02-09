@@ -1,19 +1,38 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from 'react-hot-toast';
+import masterDataService from "../services/masterDataService";
+import authService from "../services/authService";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
-  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [districts, setDistricts] = useState([]);
+  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
 
-  const districts = [
-    "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
-    "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
-    "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
-    "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
-    "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
-  ];
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    districtId: ""
+  });
+  const [selectedDistrictName, setSelectedDistrictName] = useState("");
+
+  // Fetch districts on mount
+  useEffect(() => {
+    const fetchDistricts = async () => {
+      try {
+        const data = await masterDataService.getDistricts();
+        setDistricts(data || []);
+      } catch (error) {
+        console.error("Failed to load districts", error);
+        toast.error("Failed to load districts. Please check your connection.");
+      }
+    };
+    fetchDistricts();
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -25,6 +44,36 @@ export default function RegisterPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleDistrictSelect = (district) => {
+    setFormData({ ...formData, districtId: district.id });
+    setSelectedDistrictName(district.name);
+    setDistrictOpen(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.password || !formData.districtId) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.register(formData);
+      toast.success("Registration successful! Please login.");
+      navigate("/login");
+    } catch (error) {
+      console.error("Registration failed", error);
+      toast.error(error.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="h-screen bg-[#f6f8f6] flex flex-col overflow-hidden">
@@ -88,7 +137,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Form */}
-            <form className="flex flex-col gap-2.5">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
               {/* Full Name */}
               <div className="flex flex-col gap-0.5">
                 <label className="text-[9px] font-medium text-[#131613]">Full Name</label>
@@ -96,8 +145,12 @@ export default function RegisterPage() {
                   <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">person</span>
                   <input
                     type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
                     placeholder="e.g. Sunil Perera"
                     className="w-full h-8 pl-8 pr-3 rounded border border-gray-300 text-[10px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    required
                   />
                 </div>
               </div>
@@ -112,26 +165,27 @@ export default function RegisterPage() {
                     className="w-full h-8 pl-8 pr-7 rounded border border-gray-300 text-[10px] text-left focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white cursor-pointer flex items-center"
                   >
                     <span className="material-symbols-outlined absolute left-2 text-gray-400 text-sm">location_on</span>
-                    <span className={selectedDistrict ? "text-gray-700" : "text-gray-500"}>
-                      {selectedDistrict || "Select your farming district"}
+                    <span className={selectedDistrictName ? "text-gray-700" : "text-gray-500"}>
+                      {selectedDistrictName || "Select your farming district"}
                     </span>
                     <span className="material-symbols-outlined absolute right-2 text-gray-400 text-sm">expand_more</span>
                   </button>
 
                   {districtOpen && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 max-h-40 overflow-y-auto">
-                      {districts.map((district) => (
-                        <div
-                          key={district}
-                          onClick={() => {
-                            setSelectedDistrict(district);
-                            setDistrictOpen(false);
-                          }}
-                          className="px-3 py-1.5 text-[10px] text-gray-700 hover:bg-primary/10 cursor-pointer"
-                        >
-                          {district}
-                        </div>
-                      ))}
+                      {districts.length > 0 ? (
+                        districts.map((district) => (
+                          <div
+                            key={district.id}
+                            onClick={() => handleDistrictSelect(district)}
+                            className="px-3 py-1.5 text-[10px] text-gray-700 hover:bg-primary/10 cursor-pointer"
+                          >
+                            {district.name}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-3 py-1.5 text-[10px] text-gray-500">Loading districts...</div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -145,8 +199,12 @@ export default function RegisterPage() {
                   <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">mail</span>
                   <input
                     type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     placeholder="e.g. person@gmail.com"
                     className="w-full h-8 pl-8 pr-3 rounded border border-gray-300 text-[10px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    required
                   />
                 </div>
               </div>
@@ -158,8 +216,12 @@ export default function RegisterPage() {
                   <span className="material-symbols-outlined absolute left-2 text-gray-400 text-sm">lock</span>
                   <input
                     type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
                     placeholder="Create a secure password"
                     className="w-full h-8 pl-8 pr-8 rounded border border-gray-300 text-[10px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    required
                   />
                   <button
                     type="button"
@@ -176,10 +238,11 @@ export default function RegisterPage() {
               {/* Register Button */}
               <button
                 type="submit"
-                className="w-full h-8 mt-1 rounded bg-primary text-white text-[10px] font-medium flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors"
+                disabled={loading}
+                className="w-full h-8 mt-1 rounded bg-primary text-white text-[10px] font-medium flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Register Account
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                {loading ? "Registering..." : "Register Account"}
+                {!loading && <span className="material-symbols-outlined text-sm">arrow_forward</span>}
               </button>
             </form>
 
@@ -191,7 +254,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Google Button */}
-            <button className="w-full h-8 rounded border border-gray-300 text-[10px] font-medium text-[#131613] flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors">
+            <button type="button" className="w-full h-8 rounded border border-gray-300 text-[10px] font-medium text-[#131613] flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors">
               <svg className="w-3 h-3" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />

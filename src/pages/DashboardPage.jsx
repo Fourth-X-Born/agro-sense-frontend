@@ -4,6 +4,19 @@ import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 
 export default function DashboardPage() {
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse user data");
+      }
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
       {/* Dashboard Navbar */}
@@ -14,19 +27,19 @@ export default function DashboardPage() {
         {/* Greeting Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="animate-fade-in-left">
-            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, Sunil!</h1>
+            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, {user?.name || 'Farmer'}!</h1>
             <p className="text-gray-500 text-sm">
-              Here is your farming overview for today, <span className="text-primary font-medium">Tuesday, 24 Oct.</span>
+              Here is your farming overview for today, <span className="text-primary font-medium">{new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' })}.</span>
             </p>
           </div>
           <div className="flex gap-2 mt-3 md:mt-0 animate-fade-in-right delay-100">
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
               <span className="material-symbols-outlined text-sm text-gray-500">location_on</span>
-              Polonnaruwa
+              {user?.district || 'Polonnaruwa'}
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
               <span className="material-symbols-outlined text-sm text-amber-500">star</span>
-              Paddy - Yala Season
+              {user?.crop || 'Paddy'} - Yala Season
             </div>
           </div>
         </div>

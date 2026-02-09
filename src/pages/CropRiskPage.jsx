@@ -1,20 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
+import masterDataService from "../services/masterDataService"; // Import service
 
 export default function CropRiskPage() {
+    const [user, setUser] = useState(null);
+    const [districts, setDistricts] = useState([]); // Dynamic districts
     const [selectedDistrict, setSelectedDistrict] = useState("Polonnaruwa");
     const [selectedCrop, setSelectedCrop] = useState("Paddy (Rice)");
     const [selectedGrowthStage, setSelectedGrowthStage] = useState("Vegetative Phase");
 
-    const districts = [
-        "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
-        "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
-        "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
-        "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
-        "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
-    ];
+    useEffect(() => {
+        // Load user from local storage
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            try {
+                const parsedUser = JSON.parse(storedUser);
+                setUser(parsedUser);
+                if (parsedUser.district) {
+                    setSelectedDistrict(parsedUser.district);
+                }
+            } catch (e) {
+                console.error("Failed to parse user data");
+            }
+        }
+
+        // Fetch districts dynamically
+        const fetchDistricts = async () => {
+            try {
+                const data = await masterDataService.getDistricts();
+                if (data && Array.isArray(data)) {
+                    // Extract names if objects, or use as is
+                    const districtNames = data.map(d => typeof d === 'object' ? d.name : d);
+                    setDistricts(districtNames);
+                }
+            } catch (error) {
+                console.error("Failed to load districts", error);
+                // Fallback to a default list if fetch fails
+                setDistricts([
+                    "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
+                    "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
+                    "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
+                    "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
+                    "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
+                ]);
+            }
+        };
+        fetchDistricts();
+    }, []);
 
     const crops = ["Paddy (Rice)", "Vegetables", "Fruits", "Tea", "Coconut", "Rubber"];
     const growthStages = ["Germination", "Seedling", "Vegetative Phase", "Flowering", "Grain Filling", "Maturity"];
@@ -30,7 +64,7 @@ export default function CropRiskPage() {
                 <div className="mb-6 animate-fade-in-left">
                     <h1 className="text-xl font-bold text-[#131613]">AI Crop Risk Assessment</h1>
                     <p className="text-gray-500 text-xs">
-                        Real-time intelligence for <span className="text-primary font-medium">Polonnaruwa District</span> • Paddy Cultivation
+                        Real-time intelligence for <span className="text-primary font-medium">{selectedDistrict} District</span> • {selectedCrop}
                     </p>
                 </div>
 

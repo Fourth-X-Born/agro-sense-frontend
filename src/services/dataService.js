@@ -103,6 +103,24 @@ const dataService = {
         return response;
     },
 
+    // Get weather data for a district
+    getWeather: async (districtId) => {
+        const response = await api.get(`/weather?districtId=${districtId}`);
+        return response;
+    },
+
+    // Get 7-day forecast for a district
+    getForecast: async (districtId) => {
+        const response = await api.get(`/weather/forecast?districtId=${districtId}`);
+        return response;
+    },
+
+    // Get weather alerts for a district
+    getWeatherAlerts: async (districtId) => {
+        const response = await api.get(`/weather/alerts?districtId=${districtId}`);
+        return response;
+    },
+
     // Upload profile photo
     uploadProfilePhoto: async (farmerId, file) => {
         const formData = new FormData();

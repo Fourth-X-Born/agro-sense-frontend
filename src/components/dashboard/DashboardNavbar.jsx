@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import NotificationDropdown from "./NotificationDropdown";
 
 const DashboardNavbar = () => {
     const location = useLocation();
@@ -47,8 +48,8 @@ const DashboardNavbar = () => {
                             key={item.path}
                             to={item.path}
                             className={`text-xs font-normal transition-colors ${currentPath === item.path
-                                    ? "text-[#131613] font-medium border-b-2 border-primary pb-1"
-                                    : "text-gray-500 hover:text-gray-700"
+                                ? "text-[#131613] font-medium border-b-2 border-primary pb-1"
+                                : "text-gray-500 hover:text-gray-700"
                                 }`}
                         >
                             {item.label}
@@ -58,10 +59,10 @@ const DashboardNavbar = () => {
 
                 {/* Right Side */}
                 <div className="flex items-center gap-3">
-                    <button className="relative p-1.5 rounded-full hover:bg-gray-100">
-                        <span className="material-symbols-outlined text-gray-600 text-xl">notifications</span>
-                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </button>
+                    {/* Notification Dropdown */}
+                    <NotificationDropdown />
+
+                    {/* Profile Avatar */}
                     <Link to="/settings" className="w-8 h-8 rounded-full bg-gray-300 overflow-hidden hover:ring-2 hover:ring-primary/30 transition-all flex items-center justify-center">
                         {user.profilePhoto && user.profilePhoto.length > 0 ? (
                             <img
@@ -80,3 +81,4 @@ const DashboardNavbar = () => {
 };
 
 export default DashboardNavbar;
+

@@ -9,6 +9,7 @@ const AdminSidebar = () => {
     const navItems = [
         { path: "/admin", label: "Dashboard", icon: "dashboard" },
         { path: "/admin/crops", label: "Crops", icon: "eco" },
+        { path: "/admin/crop-guides", label: "Crop Guides", icon: "menu_book" },
         { path: "/admin/market-prices", label: "Market Prices", icon: "trending_up" },
         { path: "/admin/fertilizer", label: "Fertilizer", icon: "science" },
         { path: "/admin/farmers", label: "Farmers", icon: "groups" },
@@ -44,8 +45,8 @@ const AdminSidebar = () => {
                                 <Link
                                     to={item.path}
                                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
-                                            ? "bg-green-50 text-primary"
-                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                        ? "bg-green-50 text-primary"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                         }`}
                                     style={{ animationDelay: `${index * 50}ms` }}
                                 >

@@ -85,6 +85,27 @@ const adminService = {
         const response = await api.delete(`/admin/fertilizers/${id}`);
         return response;
     },
+
+    // ==================== CROP GUIDES ====================
+    getCropGuides: async () => {
+        const response = await api.get('/admin/crop-guides');
+        return response;
+    },
+
+    createCropGuide: async (guideData) => {
+        const response = await api.post('/admin/crop-guides', guideData);
+        return response;
+    },
+
+    updateCropGuide: async (id, guideData) => {
+        const response = await api.put(`/admin/crop-guides/${id}`, guideData);
+        return response;
+    },
+
+    deleteCropGuide: async (id) => {
+        const response = await api.delete(`/admin/crop-guides/${id}`);
+        return response;
+    },
 };
 
 export default adminService;

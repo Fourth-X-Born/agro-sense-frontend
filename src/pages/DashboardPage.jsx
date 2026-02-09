@@ -1,26 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
-import authService from "../api/authService";
 
 export default function DashboardPage() {
-  const [userName, setUserName] = useState("Farmer");
-  const [userDistrict, setUserDistrict] = useState("Polonnaruwa");
-
-  useEffect(() => {
-    const user = authService.getUser();
-    if (user) {
-      if (user.userName) setUserName(user.userName);
-      if (user.district) setUserDistrict(user.district);
-    }
-  }, []);
-
-  // Get current date
-  const today = new Date();
-  const options = { weekday: 'long', day: 'numeric', month: 'short' };
-  const formattedDate = today.toLocaleDateString('en-US', options);
-
   return (
     <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
       {/* Dashboard Navbar */}
@@ -31,15 +14,15 @@ export default function DashboardPage() {
         {/* Greeting Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="animate-fade-in-left">
-            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, {userName}!</h1>
+            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, Sunil!</h1>
             <p className="text-gray-500 text-sm">
-              Here is your farming overview for today, <span className="text-primary font-medium">{formattedDate}.</span>
+              Here is your farming overview for today, <span className="text-primary font-medium">Tuesday, 24 Oct.</span>
             </p>
           </div>
           <div className="flex gap-2 mt-3 md:mt-0 animate-fade-in-right delay-100">
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
               <span className="material-symbols-outlined text-sm text-gray-500">location_on</span>
-              {userDistrict}
+              Polonnaruwa
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
               <span className="material-symbols-outlined text-sm text-amber-500">star</span>

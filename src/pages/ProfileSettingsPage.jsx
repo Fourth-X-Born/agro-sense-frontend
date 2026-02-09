@@ -2,55 +2,173 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
+import dataService from "../services/dataService";
 import authService from "../services/authService";
-import masterDataService from "../services/masterDataService";
 
 export default function ProfileSettingsPage() {
     const navigate = useNavigate();
-    const user = authService.getCurrentUser();
     const [activeTab, setActiveTab] = useState("profile");
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [districts, setDistricts] = useState([]);
+    const [crops, setCrops] = useState([]);
+    const [successMessage, setSuccessMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
-    // Initialize with empty strings if user data is missing
     const [formData, setFormData] = useState({
-        fullName: user ? user.name : "",
-        email: user ? user.email : "",
-        phone: user ? user.phone : "",
-        language: "English",
-        district: user ? user.district : "",
-        primaryCrop: user ? user.crop : ""
+        fullName: "",
+        email: "",
+        phone: "",
+        language: "Sinhala",
+        districtId: "",
+        districtName: "",
+        primaryCropId: "",
+        primaryCropName: ""
     });
 
     const [selectedSecondaryCrops, setSelectedSecondaryCrops] = useState([]);
-    const [districts, setDistricts] = useState([]);
-    const [crops, setCrops] = useState([]);
+
+    const secondaryCropOptions = [
+        { name: "Maize", icon: "grass" },
+        { name: "Vegetables", icon: "nutrition" },
+        { name: "Fruits", icon: "local_florist" },
+        { name: "Spices", icon: "eco" }
+    ];
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [districtsData, cropsData] = await Promise.all([
-                    masterDataService.getDistricts(),
-                    masterDataService.getCrops()
-                ]);
-                setDistricts(districtsData.map(d => d.name));
-                setCrops(cropsData);
-            } catch (error) {
-                console.error("Failed to fetch master data", error);
-            }
-        };
-        fetchData();
+        fetchInitialData();
     }, []);
 
-    const toggleSecondaryCrop = (cropName) => {
-        if (selectedSecondaryCrops.includes(cropName)) {
-            setSelectedSecondaryCrops(selectedSecondaryCrops.filter(c => c !== cropName));
-        } else if (selectedSecondaryCrops.length < 3) {
-            setSelectedSecondaryCrops([...selectedSecondaryCrops, cropName]);
+    const fetchInitialData = async () => {
+        try {
+            setLoading(true);
+            const [districtsRes, cropsRes] = await Promise.all([
+                dataService.getDistricts(),
+                dataService.getCrops(),
+            ]);
+
+            if (districtsRes.success) setDistricts(districtsRes.data || []);
+            if (cropsRes.success) setCrops(cropsRes.data || []);
+
+            // Get user data from localStorage (set during login)
+            const userData = JSON.parse(localStorage.getItem("user") || "{}");
+            if (userData) {
+                setFormData(prev => ({
+                    ...prev,
+                    fullName: userData.name || "",
+                    email: userData.email || "",
+                    districtId: userData.districtId || "",
+                    districtName: userData.districtName || "",
+                }));
+            }
+
+            // Try to fetch profile from API
+            const farmerId = localStorage.getItem("farmerId");
+            if (farmerId) {
+                const profileRes = await dataService.getProfile(farmerId);
+                if (profileRes.success && profileRes.data) {
+                    const profile = profileRes.data;
+                    setFormData(prev => ({
+                        ...prev,
+                        fullName: profile.name || prev.fullName,
+                        email: profile.email || prev.email,
+                        phone: profile.phone || "",
+                        districtId: profile.districtId || prev.districtId,
+                        districtName: profile.districtName || prev.districtName,
+                        primaryCropId: profile.primaryCropId || "",
+                        primaryCropName: profile.primaryCropName || "",
+                    }));
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching data:", err);
+        } finally {
+            setLoading(false);
         }
     };
 
+    const handleSave = async () => {
+        try {
+            setSaving(true);
+            setErrorMessage("");
+            setSuccessMessage("");
+
+            const farmerId = localStorage.getItem("farmerId");
+            if (!farmerId) {
+                setErrorMessage("User session not found. Please login again.");
+                return;
+            }
+
+            const updateData = {
+                name: formData.fullName,
+                phone: formData.phone,
+                districtId: parseInt(formData.districtId) || null,
+                primaryCropId: parseInt(formData.primaryCropId) || null,
+            };
+
+            const response = await dataService.updateProfile(farmerId, updateData);
+            if (response.success) {
+                setSuccessMessage("Profile updated successfully!");
+                // Update localStorage with new data
+                const userData = JSON.parse(localStorage.getItem("user") || "{}");
+                localStorage.setItem("user", JSON.stringify({ ...userData, ...updateData }));
+            } else {
+                setErrorMessage(response.message || "Failed to update profile");
+            }
+        } catch (err) {
+            console.error("Error saving profile:", err);
+            setErrorMessage("Failed to save changes. Please try again.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleLogout = () => {
+        authService.logout();
+        navigate("/login");
+    };
+
+    const toggleSecondaryCrop = (crop) => {
+        if (selectedSecondaryCrops.includes(crop)) {
+            setSelectedSecondaryCrops(selectedSecondaryCrops.filter(c => c !== crop));
+        } else if (selectedSecondaryCrops.length < 3) {
+            setSelectedSecondaryCrops([...selectedSecondaryCrops, crop]);
+        }
+    };
+
+    const handleDistrictChange = (e) => {
+        const districtId = e.target.value;
+        const district = districts.find(d => d.id === parseInt(districtId));
+        setFormData({
+            ...formData,
+            districtId: districtId,
+            districtName: district?.name || ""
+        });
+    };
+
+    const handleCropChange = (e) => {
+        const cropId = e.target.value;
+        const crop = crops.find(c => c.id === parseInt(cropId));
+        setFormData({
+            ...formData,
+            primaryCropId: cropId,
+            primaryCropName: crop?.name || ""
+        });
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
+                <DashboardNavbar />
+                <div className="flex-1 flex items-center justify-center">
+                    <span className="material-symbols-outlined animate-spin text-3xl text-primary">progress_activity</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
-            {/* Dashboard Navbar */}
             <DashboardNavbar />
 
             {/* Page Header */}
@@ -70,16 +188,12 @@ export default function ProfileSettingsPage() {
                             {/* Profile Header */}
                             <div className="p-4 border-b border-gray-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
-                                            alt="Profile"
-                                            className="w-full h-full object-cover"
-                                        />
+                                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-primary text-xl">person</span>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-[#131613]">{user ? user.name : "Ruwan Perera"}</p>
-                                        <span className="text-[10px] text-primary font-medium">Pro Plan</span>
+                                        <p className="text-sm font-semibold text-[#131613]">{formData.fullName || "User"}</p>
+                                        <span className="text-[10px] text-gray-500">{formData.email}</span>
                                     </div>
                                 </div>
                             </div>
@@ -88,42 +202,31 @@ export default function ProfileSettingsPage() {
                             <div className="p-2">
                                 <button
                                     onClick={() => setActiveTab("profile")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "profile" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
-                                        }`}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "profile" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"}`}
                                 >
                                     <span className="material-symbols-outlined text-base">person</span>
                                     Profile
                                 </button>
                                 <button
                                     onClick={() => setActiveTab("farm")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "farm" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
-                                        }`}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "farm" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"}`}
                                 >
                                     <span className="material-symbols-outlined text-base">agriculture</span>
                                     Farm Details
                                 </button>
                                 <button
                                     onClick={() => setActiveTab("security")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "security" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
-                                        }`}
+                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "security" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"}`}
                                 >
                                     <span className="material-symbols-outlined text-base">lock</span>
                                     Security
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("language")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "language" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    <span className="material-symbols-outlined text-base">language</span>
-                                    Language
                                 </button>
                             </div>
 
                             {/* Logout */}
                             <div className="p-2 border-t border-gray-100">
                                 <button
-                                    onClick={() => navigate("/")}
+                                    onClick={handleLogout}
                                     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
                                 >
                                     <span className="material-symbols-outlined text-base">logout</span>
@@ -143,14 +246,35 @@ export default function ProfileSettingsPage() {
                                     <p className="text-xs text-gray-500">Update your personal details and agricultural preferences.</p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+                                    <button
+                                        onClick={() => fetchInitialData()}
+                                        className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                                    >
                                         Cancel
                                     </button>
-                                    <button className="px-4 py-2 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm hover:shadow hover:-translate-y-0.5">
-                                        Save Changes
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={saving}
+                                        className="px-4 py-2 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm hover:shadow disabled:opacity-50"
+                                    >
+                                        {saving ? "Saving..." : "Save Changes"}
                                     </button>
                                 </div>
                             </div>
+
+                            {/* Messages */}
+                            {successMessage && (
+                                <div className="mx-5 mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-xs flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-base">check_circle</span>
+                                    {successMessage}
+                                </div>
+                            )}
+                            {errorMessage && (
+                                <div className="mx-5 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-base">error</span>
+                                    {errorMessage}
+                                </div>
+                            )}
 
                             {/* Form Content */}
                             <div className="p-5 space-y-6">
@@ -162,7 +286,6 @@ export default function ProfileSettingsPage() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* Full Name */}
                                         <div>
                                             <label className="text-[10px] font-medium text-gray-500 block mb-1">Full Name</label>
                                             <input
@@ -173,18 +296,16 @@ export default function ProfileSettingsPage() {
                                             />
                                         </div>
 
-                                        {/* Email Address */}
                                         <div>
                                             <label className="text-[10px] font-medium text-gray-500 block mb-1">Email Address</label>
                                             <input
                                                 type="email"
                                                 value={formData.email}
-                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary transition-colors"
+                                                disabled
+                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-gray-400 bg-gray-50"
                                             />
                                         </div>
 
-                                        {/* Phone Number */}
                                         <div>
                                             <label className="text-[10px] font-medium text-gray-500 block mb-1">Phone Number</label>
                                             <div className="flex">
@@ -198,7 +319,6 @@ export default function ProfileSettingsPage() {
                                             </div>
                                         </div>
 
-                                        {/* Preferred Language */}
                                         <div>
                                             <label className="text-[10px] font-medium text-gray-500 block mb-1">Preferred Language</label>
                                             <select
@@ -222,32 +342,31 @@ export default function ProfileSettingsPage() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        {/* Farming District */}
                                         <div>
                                             <label className="text-[10px] font-medium text-gray-500 block mb-1">Farming District</label>
                                             <select
-                                                value={formData.district}
-                                                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                                                value={formData.districtId}
+                                                onChange={handleDistrictChange}
                                                 className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
                                             >
+                                                <option value="">Select District</option>
                                                 {districts.map(d => (
-                                                    <option key={d} value={d}>{d}</option>
+                                                    <option key={d.id} value={d.id}>{d.name}</option>
                                                 ))}
                                             </select>
                                             <p className="text-[9px] text-gray-400 mt-1">This helps us provide localized weather and soil advisory.</p>
                                         </div>
 
-                                        {/* Primary Crop */}
                                         <div>
                                             <label className="text-[10px] font-medium text-gray-500 block mb-1">Primary Crop</label>
                                             <select
-                                                value={formData.primaryCrop}
-                                                onChange={(e) => setFormData({ ...formData, primaryCrop: e.target.value })}
+                                                value={formData.primaryCropId}
+                                                onChange={handleCropChange}
                                                 className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
                                             >
-                                                <option value="">Select Primary Crop</option>
-                                                {crops.map(crop => (
-                                                    <option key={crop.id} value={crop.name}>{crop.name}</option>
+                                                <option value="">Select Crop</option>
+                                                {crops.map(c => (
+                                                    <option key={c.id} value={c.id}>{c.name}</option>
                                                 ))}
                                             </select>
                                             <p className="text-[9px] text-primary mt-1 flex items-center gap-0.5">
@@ -261,9 +380,9 @@ export default function ProfileSettingsPage() {
                                     <div>
                                         <label className="text-[10px] font-medium text-gray-500 block mb-2">Secondary Crops (Select up to 3)</label>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                            {crops.map((crop) => (
+                                            {secondaryCropOptions.map((crop) => (
                                                 <button
-                                                    key={crop.id}
+                                                    key={crop.name}
                                                     onClick={() => toggleSecondaryCrop(crop.name)}
                                                     className={`relative p-4 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${selectedSecondaryCrops.includes(crop.name)
                                                         ? "border-primary bg-primary/5"
@@ -275,8 +394,7 @@ export default function ProfileSettingsPage() {
                                                             <span className="material-symbols-outlined text-white text-xs">check</span>
                                                         </span>
                                                     )}
-                                                    <span className={`material-symbols-outlined text-2xl mb-2 ${selectedSecondaryCrops.includes(crop.name) ? "text-primary" : "text-gray-400"
-                                                        }`}>eco</span>
+                                                    <span className={`material-symbols-outlined text-2xl mb-2 ${selectedSecondaryCrops.includes(crop.name) ? "text-primary" : "text-gray-400"}`}>{crop.icon}</span>
                                                     <p className="text-xs font-medium text-[#131613]">{crop.name}</p>
                                                 </button>
                                             ))}
@@ -294,7 +412,7 @@ export default function ProfileSettingsPage() {
                                     <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-colors hover:bg-gray-100">
                                         <div>
                                             <p className="text-xs font-medium text-[#131613]">Password</p>
-                                            <p className="text-[10px] text-gray-400">Last changed 3 months ago</p>
+                                            <p className="text-[10px] text-gray-400">Change your account password</p>
                                         </div>
                                         <button className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-white transition-colors">
                                             Change Password
@@ -307,7 +425,6 @@ export default function ProfileSettingsPage() {
                 </div>
             </main>
 
-            {/* Footer */}
             <DashboardFooter />
         </div>
     );

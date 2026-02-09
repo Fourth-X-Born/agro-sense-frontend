@@ -1,61 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import masterDataService from "../services/masterDataService";
-import authService from "../services/authService";
+import { Link } from "react-router-dom";
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [districtOpen, setDistrictOpen] = useState(false);
-  const [districts, setDistricts] = useState([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    districtId: null
-  });
-  const [selectedDistrictName, setSelectedDistrictName] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
   const dropdownRef = useRef(null);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    loadDistricts();
-  }, []);
-
-  const loadDistricts = async () => {
-    try {
-      const data = await masterDataService.getDistricts();
-      setDistricts(data);
-    } catch (error) {
-      console.error("Failed to load districts", error);
-    }
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleDistrictSelect = (district) => {
-    setFormData({ ...formData, districtId: district.id });
-    setSelectedDistrictName(district.name);
-    setDistrictOpen(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.email || !formData.password || !formData.districtId) {
-      alert("Please fill in all fields");
-      return;
-    }
-
-    try {
-      await authService.register(formData);
-      alert("Registration successful! Please login.");
-      navigate("/login");
-    } catch (error) {
-      console.error("Registration failed", error);
-      alert("Registration failed. Please try again.");
-    }
-  };
+  const districts = [
+    "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
+    "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
+    "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
+    "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
+    "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
+  ];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -130,7 +88,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Form */}
-            <form className="flex flex-col gap-2.5" onSubmit={handleSubmit}>
+            <form className="flex flex-col gap-2.5">
               {/* Full Name */}
               <div className="flex flex-col gap-0.5">
                 <label className="text-[9px] font-medium text-[#131613]">Full Name</label>
@@ -138,9 +96,6 @@ export default function RegisterPage() {
                   <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">person</span>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
                     placeholder="e.g. Sunil Perera"
                     className="w-full h-8 pl-8 pr-3 rounded border border-gray-300 text-[10px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   />
@@ -157,8 +112,8 @@ export default function RegisterPage() {
                     className="w-full h-8 pl-8 pr-7 rounded border border-gray-300 text-[10px] text-left focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-white cursor-pointer flex items-center"
                   >
                     <span className="material-symbols-outlined absolute left-2 text-gray-400 text-sm">location_on</span>
-                    <span className={selectedDistrictName ? "text-gray-700" : "text-gray-500"}>
-                      {selectedDistrictName || "Select your farming district"}
+                    <span className={selectedDistrict ? "text-gray-700" : "text-gray-500"}>
+                      {selectedDistrict || "Select your farming district"}
                     </span>
                     <span className="material-symbols-outlined absolute right-2 text-gray-400 text-sm">expand_more</span>
                   </button>
@@ -167,11 +122,14 @@ export default function RegisterPage() {
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-50 max-h-40 overflow-y-auto">
                       {districts.map((district) => (
                         <div
-                          key={district.id}
-                          onClick={() => handleDistrictSelect(district)}
+                          key={district}
+                          onClick={() => {
+                            setSelectedDistrict(district);
+                            setDistrictOpen(false);
+                          }}
                           className="px-3 py-1.5 text-[10px] text-gray-700 hover:bg-primary/10 cursor-pointer"
                         >
-                          {district.name}
+                          {district}
                         </div>
                       ))}
                     </div>
@@ -187,9 +145,6 @@ export default function RegisterPage() {
                   <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">mail</span>
                   <input
                     type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
                     placeholder="e.g. person@gmail.com"
                     className="w-full h-8 pl-8 pr-3 rounded border border-gray-300 text-[10px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   />
@@ -203,9 +158,6 @@ export default function RegisterPage() {
                   <span className="material-symbols-outlined absolute left-2 text-gray-400 text-sm">lock</span>
                   <input
                     type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
                     placeholder="Create a secure password"
                     className="w-full h-8 pl-8 pr-8 rounded border border-gray-300 text-[10px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                   />
@@ -225,7 +177,6 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 className="w-full h-8 mt-1 rounded bg-primary text-white text-[10px] font-medium flex items-center justify-center gap-1 hover:bg-primary/90 transition-colors"
-                disabled={!formData.name || !formData.email || !formData.password || !formData.districtId}
               >
                 Register Account
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>

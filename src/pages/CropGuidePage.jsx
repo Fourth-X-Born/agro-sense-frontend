@@ -1,21 +1,67 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { fertilizerAPI, masterDataAPI } from "../services/api";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 
 export default function CropGuidePage() {
+    const { user } = useAuth();
+    const [fertilizers, setFertilizers] = useState([]);
+    const [crops, setCrops] = useState([]);
+    const [selectedCrop, setSelectedCrop] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    // Growth stages (static data - could be fetched from API if available)
     const growthStages = [
         { name: "Seedling", days: "Day 0-14", status: "completed" },
-        { name: "Vegetative", days: "Day 15-55 (Current)", status: "active" },
-        { name: "Flowering", days: "Day 56-85", status: "upcoming" },
-        { name: "Harvest", days: "Day 86-100", status: "upcoming" }
+        { name: "Tillering", days: "Day 15-35", status: "completed" },
+        { name: "Panicle Initiation", days: "Day 36-50", status: "current" },
+        { name: "Heading", days: "Day 51-65", status: "upcoming" },
+        { name: "Flowering", days: "Day 66-80", status: "upcoming" },
+        { name: "Ripening", days: "Day 81-100", status: "upcoming" },
+        { name: "Harvesting", days: "Day 100+", status: "upcoming" },
     ];
 
-    const fertilizerData = [
-        { type: "Urea (Nitrogen)", dosage: "50 kg", method: "Broadcast", timing: "Day 21" },
-        { type: "MOP (Potassium)", dosage: "15 kg", method: "Band placement", timing: "Day 35" },
-        { type: "Zinc Sulfate", dosage: "5 kg", method: "Foliar Spray", timing: "Day 40 (If deficiency)" }
-    ];
+    // Fetch crops and fertilizers
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            setError("");
+            try {
+                // Fetch crops
+                const cropsResponse = await masterDataAPI.getCrops();
+                if (cropsResponse.success && cropsResponse.data) {
+                    setCrops(cropsResponse.data);
+                    if (cropsResponse.data.length > 0) {
+                        setSelectedCrop(cropsResponse.data[0]);
+                    }
+                }
+
+                // Fetch fertilizers
+                const fertResponse = await fertilizerAPI.getAll();
+                if (fertResponse.success && fertResponse.data) {
+                    setFertilizers(fertResponse.data);
+                } else {
+                    // Use fallback data
+                    setFertilizers(fallbackFertilizers);
+                }
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                setError("Failed to load data");
+                setFertilizers(fallbackFertilizers);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    // Filter fertilizers by selected crop
+    const filteredFertilizers = selectedCrop
+        ? fertilizers.filter(f => f.cropId === selectedCrop.id || !f.cropId)
+        : fertilizers;
 
     return (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
@@ -24,191 +70,219 @@ export default function CropGuidePage() {
 
             {/* Main Content */}
             <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6 animate-fade-in-up">
-                {/* Page Header */}
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6 animate-fade-in-down">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-[#131613]">Crop Guide: Paddy / Rice</h1>
-                        <p className="text-gray-500 text-sm mt-1">Recommended fertilizer and growth schedule for Red Rice in the Dry Zone.</p>
-                        <div className="flex items-center gap-1.5 mt-2">
-                            <span className="material-symbols-outlined text-orange-400 text-sm animate-spin-slow">sunny</span>
-                            <span className="text-orange-500 text-xs font-medium">Dry Season</span>
-                        </div>
-                    </div>
-                    <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg text-xs font-medium text-[#131613] hover:bg-gray-50 transition-colors hover:shadow-sm">
-                        <span className="material-symbols-outlined text-base">download</span>
-                        Download PDF
-                    </button>
-                </div>
-
-                {/* Growth Stage Timeline */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6 animate-scale-in delay-100 hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between relative">
-                        {/* Connection Lines */}
-                        <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 z-0"></div>
-                        <div className="absolute top-4 left-0 w-1/4 h-0.5 bg-primary z-0"></div>
-
-                        {growthStages.map((stage, index) => (
-                            <div key={index} className="flex flex-col items-center relative z-10" style={{ animationDelay: `${index * 150}ms` }}>
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${stage.status === "active" ? "bg-primary scale-110 shadow-md ring-4 ring-primary/20" :
-                                    stage.status === "completed" ? "bg-primary" :
-                                        "bg-gray-200"
-                                    }`}>
-                                    {stage.status === "completed" && (
-                                        <span className="material-symbols-outlined text-white text-sm">check</span>
-                                    )}
-                                </div>
-                                <p className={`text-xs font-medium mt-2 transition-colors ${stage.status === "active" ? "text-primary font-bold" :
-                                    stage.status === "completed" ? "text-primary" :
-                                        "text-gray-400"
-                                    }`}>{stage.name}</p>
-                                <p className="text-[10px] text-gray-400">{stage.days}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Info Alert */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3 animate-fade-in delay-200 hover:shadow-sm transition-shadow">
-                    <span className="material-symbols-outlined text-blue-500 text-lg animate-pulse">info</span>
-                    <div>
-                        <h4 className="text-sm font-semibold text-blue-800">Approaching Maximum Tillering</h4>
-                        <p className="text-xs text-blue-700 leading-relaxed">
-                            Your crop is entering the peak growth phase. Ensure water levels are maintained at 5cm depth for optimal nutrient uptake before the next fertilizer application.
+                        <h1 className="text-2xl font-bold text-[#131613]">Crop Guide</h1>
+                        <p className="text-gray-500 text-sm">
+                            Growth stages, fertilizer schedules, and water management
                         </p>
                     </div>
+
+                    {/* Crop Selector */}
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Crop:</span>
+                        <select
+                            value={selectedCrop?.id || ""}
+                            onChange={(e) => {
+                                const crop = crops.find(c => c.id === parseInt(e.target.value));
+                                setSelectedCrop(crop);
+                            }}
+                            className="h-9 px-3 rounded-lg border border-gray-200 text-sm bg-white focus:outline-none focus:border-primary"
+                        >
+                            {crops.map(crop => (
+                                <option key={crop.id} value={crop.id}>{crop.name}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
-                {/* Main Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Column - Main Content */}
-                    <div className="lg:col-span-2 space-y-6 animate-fade-in-up delay-300">
-                        {/* Stage Guidelines */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-shadow">
-                            <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h3 className="text-sm font-bold text-[#131613]">Stage 2: Vegetative Growth Guidelines</h3>
-                                    <p className="text-[10px] text-gray-400">Focus: Leaf development & Root strengthening</p>
-                                </div>
-                                <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full animate-pulse-subtle">ACTIVE</span>
+                {loading ? (
+                    <div className="flex items-center justify-center h-64">
+                        <div className="text-center">
+                            <span className="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
+                            <p className="text-gray-500 mt-2">Loading crop guide...</p>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* Growth Stages Timeline */}
+                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <span className="material-symbols-outlined text-primary text-lg">timeline</span>
+                                <span className="font-semibold text-sm text-[#131613]">Growth Stages</span>
+                                <span className="ml-auto text-[10px] text-gray-400 bg-gray-100 px-2 py-1 rounded-full">
+                                    {selectedCrop?.name || 'Paddy'} - Yala Season
+                                </span>
                             </div>
 
-                            {/* Fertilizer Application */}
-                            <div className="mb-6">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span className="material-symbols-outlined text-primary text-base">science</span>
-                                    <span className="text-xs font-semibold text-[#131613]">Fertilizer Application</span>
+                            {/* Timeline */}
+                            <div className="relative">
+                                {/* Progress Line */}
+                                <div className="absolute top-5 left-0 right-0 h-1 bg-gray-200 rounded-full">
+                                    <div
+                                        className="h-full bg-primary rounded-full transition-all duration-500"
+                                        style={{ width: '37%' }}
+                                    ></div>
                                 </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className="border-b border-gray-100">
-                                                <th className="text-left text-[10px] font-medium text-gray-500 pb-2">Fertilizer Type</th>
-                                                <th className="text-left text-[10px] font-medium text-gray-500 pb-2">Dosage (per acre)</th>
-                                                <th className="text-left text-[10px] font-medium text-gray-500 pb-2">Method</th>
-                                                <th className="text-left text-[10px] font-medium text-gray-500 pb-2">Timing</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {fertilizerData.map((row, index) => (
-                                                <tr key={index} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                                                    <td className="py-2.5 text-xs text-[#131613] font-medium">{row.type}</td>
-                                                    <td className="py-2.5 text-xs text-gray-600">{row.dosage}</td>
-                                                    <td className="py-2.5 text-xs text-gray-600">{row.method}</td>
-                                                    <td className="py-2.5 text-xs text-gray-600">{row.timing}</td>
+                                {/* Stage Markers */}
+                                <div className="relative flex justify-between">
+                                    {growthStages.map((stage, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex flex-col items-center"
+                                            style={{ width: `${100 / growthStages.length}%` }}
+                                        >
+                                            <div
+                                                className={`w-10 h-10 rounded-full flex items-center justify-center z-10 transition-all duration-300 ${stage.status === 'completed'
+                                                        ? 'bg-primary text-white'
+                                                        : stage.status === 'current'
+                                                            ? 'bg-primary text-white ring-4 ring-primary/30 animate-pulse'
+                                                            : 'bg-gray-200 text-gray-400'
+                                                    }`}
+                                            >
+                                                {stage.status === 'completed' ? (
+                                                    <span className="material-symbols-outlined text-sm">check</span>
+                                                ) : stage.status === 'current' ? (
+                                                    <span className="material-symbols-outlined text-sm">radio_button_checked</span>
+                                                ) : (
+                                                    <span className="text-xs font-bold">{index + 1}</span>
+                                                )}
+                                            </div>
+                                            <p className={`mt-2 text-[10px] text-center font-medium ${stage.status === 'current' ? 'text-primary' : 'text-gray-600'
+                                                }`}>
+                                                {stage.name}
+                                            </p>
+                                            <p className="text-[9px] text-gray-400">{stage.days}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Main Content Grid */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Fertilizer Schedule */}
+                            <div className="lg:col-span-2">
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-primary text-lg">science</span>
+                                            <span className="font-semibold text-sm text-[#131613]">Fertilizer Schedule</span>
+                                        </div>
+                                        <span className="text-[10px] text-gray-400">Recommended for your soil type</span>
+                                    </div>
+
+                                    {/* Fertilizer Table */}
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-xs">
+                                            <thead>
+                                                <tr className="bg-gray-50">
+                                                    <th className="text-left p-3 font-medium text-gray-600 rounded-l-lg">Type</th>
+                                                    <th className="text-left p-3 font-medium text-gray-600">Dosage</th>
+                                                    <th className="text-left p-3 font-medium text-gray-600">Method</th>
+                                                    <th className="text-left p-3 font-medium text-gray-600 rounded-r-lg">Timing</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody>
+                                                {filteredFertilizers.length > 0 ? (
+                                                    filteredFertilizers.map((fert, index) => (
+                                                        <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                                            <td className="p-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className={`w-2 h-2 rounded-full ${fert.type?.includes('Nitrogen') || fert.name?.includes('Urea') ? 'bg-blue-500' :
+                                                                            fert.type?.includes('Phosphorus') || fert.name?.includes('TSP') ? 'bg-orange-500' :
+                                                                                fert.type?.includes('Potassium') || fert.name?.includes('MOP') ? 'bg-purple-500' :
+                                                                                    'bg-green-500'
+                                                                        }`}></div>
+                                                                    <span className="font-medium text-[#131613]">{fert.name || fert.type}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="p-3 text-gray-600">{fert.dosage || fert.dosagePerAcre || 'As recommended'}</td>
+                                                            <td className="p-3 text-gray-600">{fert.method || fert.applicationMethod || 'Broadcast'}</td>
+                                                            <td className="p-3">
+                                                                <span className="px-2 py-1 bg-primary/10 text-primary text-[10px] font-medium rounded">
+                                                                    {fert.timing || fert.applicationStage || 'As needed'}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="4" className="p-4 text-center text-gray-400">
+                                                            No fertilizer recommendations available
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Water Management */}
+                            {/* Water Management Tips */}
                             <div>
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span className="material-symbols-outlined text-blue-500 text-base">water_drop</span>
-                                    <span className="text-xs font-semibold text-[#131613]">Water Management</span>
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <span className="material-symbols-outlined text-blue-500 text-lg">water_drop</span>
+                                        <span className="font-semibold text-sm text-[#131613]">Water Management</span>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <div className="p-3 bg-blue-50 rounded-lg border-l-3 border-blue-400">
+                                            <p className="text-xs font-medium text-blue-800 mb-1">Current Stage</p>
+                                            <p className="text-[10px] text-blue-600">
+                                                Maintain 5-7cm water level during panicle initiation. Critical for grain formation.
+                                            </p>
+                                        </div>
+
+                                        <div className="p-3 bg-gray-50 rounded-lg">
+                                            <p className="text-xs font-medium text-gray-700 mb-1">Irrigation Schedule</p>
+                                            <p className="text-[10px] text-gray-500">
+                                                Irrigate every 3-4 days during dry periods. Reduce frequency during rainy weather.
+                                            </p>
+                                        </div>
+
+                                        <div className="p-3 bg-amber-50 rounded-lg border-l-3 border-amber-400">
+                                            <p className="text-xs font-medium text-amber-800 mb-1">⚠️ Warning</p>
+                                            <p className="text-[10px] text-amber-600">
+                                                Avoid water stress during flowering stage. Can reduce yield by 20-30%.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <p className="text-xs text-gray-500 leading-relaxed mb-4">
-                                    During the vegetative stage, maintain a shallow water layer of about 2-5 cm. Drain the field for 1-2 days before fertilizer application to prevent runoff, then re-flood.
-                                </p>
+                                {/* Quick Tips */}
+                                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mt-4">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <span className="material-symbols-outlined text-amber-500 text-lg">lightbulb</span>
+                                        <span className="font-semibold text-sm text-[#131613]">Quick Tips</span>
+                                    </div>
 
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div className="bg-blue-50 rounded-lg p-3 text-center hover:scale-105 transition-transform duration-300">
-                                        <p className="text-xl font-bold text-blue-600">5 cm</p>
-                                        <p className="text-[9px] text-blue-500 uppercase tracking-wider">Depth</p>
-                                    </div>
-                                    <div className="bg-green-50 rounded-lg p-3 text-center hover:scale-105 transition-transform duration-300">
-                                        <p className="text-xl font-bold text-green-600">pH 6.5</p>
-                                        <p className="text-[9px] text-green-500 uppercase tracking-wider">Target Acidity</p>
-                                    </div>
-                                    <div className="bg-orange-50 rounded-lg p-3 text-center hover:scale-105 transition-transform duration-300">
-                                        <p className="text-xl font-bold text-orange-600">28°C</p>
-                                        <p className="text-[9px] text-orange-500 uppercase tracking-wider">Avg Temp</p>
-                                    </div>
+                                    <ul className="space-y-2">
+                                        <li className="flex items-start gap-2 text-[10px] text-gray-600">
+                                            <span className="material-symbols-outlined text-primary text-xs mt-0.5">check_circle</span>
+                                            Apply fertilizers early morning or late evening
+                                        </li>
+                                        <li className="flex items-start gap-2 text-[10px] text-gray-600">
+                                            <span className="material-symbols-outlined text-primary text-xs mt-0.5">check_circle</span>
+                                            Don't apply fertilizers to dry soil
+                                        </li>
+                                        <li className="flex items-start gap-2 text-[10px] text-gray-600">
+                                            <span className="material-symbols-outlined text-primary text-xs mt-0.5">check_circle</span>
+                                            Split nitrogen applications for better absorption
+                                        </li>
+                                        <li className="flex items-start gap-2 text-[10px] text-gray-600">
+                                            <span className="material-symbols-outlined text-primary text-xs mt-0.5">check_circle</span>
+                                            Monitor plant color for nutrient deficiency signs
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Right Column - Sidebar */}
-                    <div className="space-y-4 animate-fade-in-right delay-500">
-                        {/* Sustainable Practices */}
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow">
-                            <h3 className="text-sm font-bold text-[#131613] mb-4">Sustainable Practices</h3>
-
-                            {/* Do's */}
-                            <div className="mb-4">
-                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">DO'S</p>
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2 group">
-                                        <span className="material-symbols-outlined text-green-500 text-base mt-0.5 group-hover:scale-110 transition-transform">check_circle</span>
-                                        <p className="text-xs text-gray-600">Apply fertilizer when the soil is moist but leaves are dry.</p>
-                                    </div>
-                                    <div className="flex items-start gap-2 group">
-                                        <span className="material-symbols-outlined text-green-500 text-base mt-0.5 group-hover:scale-110 transition-transform">check_circle</span>
-                                        <p className="text-xs text-gray-600">Scout for stem borer signs weekly.</p>
-                                    </div>
-                                    <div className="flex items-start gap-2 group">
-                                        <span className="material-symbols-outlined text-green-500 text-base mt-0.5 group-hover:scale-110 transition-transform">check_circle</span>
-                                        <p className="text-xs text-gray-600">Incorporate organic manure if available.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Don'ts */}
-                            <div className="mb-4">
-                                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">DON'TS</p>
-                                <div className="space-y-2">
-                                    <div className="flex items-start gap-2 group">
-                                        <span className="material-symbols-outlined text-red-500 text-base mt-0.5 group-hover:scale-110 transition-transform">cancel</span>
-                                        <p className="text-xs text-gray-600">Don't apply Urea if heavy rain is forecast within 24 hours.</p>
-                                    </div>
-                                    <div className="flex items-start gap-2 group">
-                                        <span className="material-symbols-outlined text-red-500 text-base mt-0.5 group-hover:scale-110 transition-transform">cancel</span>
-                                        <p className="text-xs text-gray-600">Avoid mixing pesticides with growth regulators without consulting.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <a href="#" className="text-primary text-xs font-medium flex items-center gap-1 hover:underline group">
-                                View All Guidelines <span className="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
-                            </a>
-                        </div>
-
-                        {/* Expert Help Card */}
-                        <div className="bg-primary rounded-xl p-4 text-white hover:bg-primary/90 transition-colors shadow-sm hover:shadow-md">
-                            <h3 className="text-sm font-bold mb-2">Need Expert Help?</h3>
-                            <p className="text-xs text-white/80 mb-4">
-                                Contact Agricultural Experts From Expertise of Crop Management
-                            </p>
-                            <button className="w-full py-2 bg-white text-primary text-xs font-medium rounded-lg hover:bg-white/90 transition-all hover:shadow hover:-translate-y-0.5">
-                                Contact Now
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                    </>
+                )}
             </main>
 
             {/* Footer */}
@@ -216,3 +290,11 @@ export default function CropGuidePage() {
         </div>
     );
 }
+
+// Fallback fertilizer data
+const fallbackFertilizers = [
+    { type: "Urea (Nitrogen)", dosage: "50 kg/acre", method: "Broadcast", timing: "Day 21" },
+    { type: "TSP (Phosphorus)", dosage: "25 kg/acre", method: "Band placement", timing: "Day 0" },
+    { type: "MOP (Potassium)", dosage: "30 kg/acre", method: "Broadcast", timing: "Day 45" },
+    { type: "Zinc Sulphate", dosage: "5 kg/acre", method: "Foliar spray", timing: "Day 30" },
+];

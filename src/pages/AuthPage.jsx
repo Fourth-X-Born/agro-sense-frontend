@@ -1,25 +1,70 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { masterDataAPI } from "../services/api";
 import ricePlantImg from "../assets/images/rice-plant-white-background-vector-eps-10_638232-733-removebg-preview.png";
 
 export default function AuthPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { login, register, isAuthenticated } = useAuth();
     const isLogin = location.pathname === "/login";
 
+    // Form state
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [fullName, setFullName] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+
+    // District state
     const [districtOpen, setDistrictOpen] = useState(false);
-    const [selectedDistrict, setSelectedDistrict] = useState("");
+    const [selectedDistrict, setSelectedDistrict] = useState(null);
+    const [districts, setDistricts] = useState([]);
+    const [loadingDistricts, setLoadingDistricts] = useState(false);
     const dropdownRef = useRef(null);
 
-    const districts = [
-        "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
-        "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
-        "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
-        "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
-        "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
-    ];
+    // UI state
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate("/dashboard");
+        }
+    }, [isAuthenticated, navigate]);
+
+    // Fetch districts on mount
+    useEffect(() => {
+        const fetchDistricts = async () => {
+            setLoadingDistricts(true);
+            try {
+                const response = await masterDataAPI.getDistricts();
+                if (response.success && response.data) {
+                    setDistricts(response.data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch districts:", err);
+                // Fallback to hardcoded districts if API fails
+                setDistricts([
+                    { id: 1, name: "Ampara" }, { id: 2, name: "Anuradhapura" }, { id: 3, name: "Badulla" },
+                    { id: 4, name: "Batticaloa" }, { id: 5, name: "Colombo" }, { id: 6, name: "Galle" },
+                    { id: 7, name: "Gampaha" }, { id: 8, name: "Hambantota" }, { id: 9, name: "Jaffna" },
+                    { id: 10, name: "Kalutara" }, { id: 11, name: "Kandy" }, { id: 12, name: "Kegalle" },
+                    { id: 13, name: "Kilinochchi" }, { id: 14, name: "Kurunegala" }, { id: 15, name: "Mannar" },
+                    { id: 16, name: "Matale" }, { id: 17, name: "Matara" }, { id: 18, name: "Monaragala" },
+                    { id: 19, name: "Mullaitivu" }, { id: 20, name: "Nuwara Eliya" }, { id: 21, name: "Polonnaruwa" },
+                    { id: 22, name: "Puttalam" }, { id: 23, name: "Ratnapura" }, { id: 24, name: "Trincomalee" },
+                    { id: 25, name: "Vavuniya" }
+                ]);
+            } finally {
+                setLoadingDistricts(false);
+            }
+        };
+        fetchDistricts();
+    }, []);
+
+    // Close dropdown on outside click
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -30,19 +75,53 @@ export default function AuthPage() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Clear error when switching forms
+    useEffect(() => {
+        setError("");
+    }, [isLogin]);
+
     const switchToLogin = () => navigate("/login");
     const switchToRegister = () => navigate("/register");
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        // Simulate login - redirect to dashboard
-        navigate("/dashboard");
+        setError("");
+        setLoading(true);
+
+        try {
+            await login(email, password);
+            navigate("/dashboard");
+        } catch (err) {
+            setError(err.message || "Login failed. Please check your credentials.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
-        // Simulate registration - redirect to dashboard
-        navigate("/dashboard");
+        setError("");
+
+        if (!selectedDistrict) {
+            setError("Please select your district");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            await register({
+                name: fullName,
+                email,
+                password,
+                districtId: selectedDistrict.id,
+            });
+            navigate("/dashboard");
+        } catch (err) {
+            setError(err.message || "Registration failed. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -158,6 +237,13 @@ export default function AuthPage() {
                         </p>
                     </div>
 
+                    {/* Error Message */}
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-xs text-red-600">{error}</p>
+                        </div>
+                    )}
+
                     {/* Tabs */}
                     <div className="flex border-b border-gray-200 mb-4">
                         <button
@@ -196,7 +282,10 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">mail</span>
                                             <input
                                                 type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="e.g. person@gmail.com"
+                                                required
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
                                         </div>
@@ -209,7 +298,10 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 text-gray-400 text-base">lock</span>
                                             <input
                                                 type={showPassword ? "text" : "password"}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
                                                 placeholder="Enter your password"
+                                                required
                                                 className="w-full h-9 pl-9 pr-9 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
                                             <button
@@ -234,10 +326,20 @@ export default function AuthPage() {
                                     {/* Login Button */}
                                     <button
                                         type="submit"
-                                        className="w-full h-9 rounded-lg bg-primary text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors"
+                                        disabled={loading}
+                                        className="w-full h-9 rounded-lg bg-primary text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Login
-                                        <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                        {loading ? (
+                                            <>
+                                                <span className="animate-spin material-symbols-outlined text-base">progress_activity</span>
+                                                Signing in...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Login
+                                                <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                            </>
+                                        )}
                                     </button>
                                 </form>
                             )}
@@ -257,7 +359,10 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">person</span>
                                             <input
                                                 type="text"
+                                                value={fullName}
+                                                onChange={(e) => setFullName(e.target.value)}
                                                 placeholder="e.g. Sunil Perera"
+                                                required
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
                                         </div>
@@ -270,11 +375,12 @@ export default function AuthPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setDistrictOpen(!districtOpen)}
+                                                disabled={loadingDistricts}
                                                 className="w-full h-9 pl-9 pr-8 rounded-lg border-2 border-gray-300 text-xs text-left focus:outline-none focus:border-primary bg-white cursor-pointer flex items-center"
                                             >
                                                 <span className="material-symbols-outlined absolute left-3 text-gray-400 text-base">location_on</span>
                                                 <span className={selectedDistrict ? "text-gray-700" : "text-gray-500"}>
-                                                    {selectedDistrict || "Select your farming district"}
+                                                    {loadingDistricts ? "Loading districts..." : (selectedDistrict?.name || "Select your farming district")}
                                                 </span>
                                                 <span className="material-symbols-outlined absolute right-3 text-gray-400 text-base">expand_more</span>
                                             </button>
@@ -283,14 +389,14 @@ export default function AuthPage() {
                                                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-40 overflow-y-auto">
                                                     {districts.map((district) => (
                                                         <div
-                                                            key={district}
+                                                            key={district.id}
                                                             onClick={() => {
                                                                 setSelectedDistrict(district);
                                                                 setDistrictOpen(false);
                                                             }}
                                                             className="px-3 py-1.5 text-xs text-gray-700 hover:bg-primary/10 cursor-pointer"
                                                         >
-                                                            {district}
+                                                            {district.name}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -306,7 +412,10 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">mail</span>
                                             <input
                                                 type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="e.g. person@gmail.com"
+                                                required
                                                 className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
                                         </div>
@@ -319,7 +428,10 @@ export default function AuthPage() {
                                             <span className="material-symbols-outlined absolute left-3 text-gray-400 text-base">lock</span>
                                             <input
                                                 type={showPassword ? "text" : "password"}
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
                                                 placeholder="Create a secure password"
+                                                required
                                                 className="w-full h-9 pl-9 pr-9 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
                                             />
                                             <button
@@ -337,10 +449,20 @@ export default function AuthPage() {
                                     {/* Register Button */}
                                     <button
                                         type="submit"
-                                        className="w-full h-9 mt-1 rounded-lg bg-primary text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors"
+                                        disabled={loading}
+                                        className="w-full h-9 mt-1 rounded-lg bg-primary text-white text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Register Account
-                                        <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                        {loading ? (
+                                            <>
+                                                <span className="animate-spin material-symbols-outlined text-base">progress_activity</span>
+                                                Creating account...
+                                            </>
+                                        ) : (
+                                            <>
+                                                Register Account
+                                                <span className="material-symbols-outlined text-base">arrow_forward</span>
+                                            </>
+                                        )}
                                     </button>
                                 </form>
                             )}

@@ -1,9 +1,65 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { weatherAPI, marketPriceAPI, weatherAPI as alertsAPI } from "../services/api";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const [weather, setWeather] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  const [marketPrices, setMarketPrices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Get user's first name for greeting
+  const firstName = user?.fullName?.split(' ')[0] || user?.name?.split(' ')[0] || 'Farmer';
+  const districtId = user?.districtId || user?.district?.id || 1;
+  const districtName = user?.district?.name || user?.districtName || 'Your District';
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        // Fetch weather data
+        const weatherResponse = await weatherAPI.getWeather(districtId);
+        if (weatherResponse.success && weatherResponse.data) {
+          setWeather(weatherResponse.data);
+        }
+
+        // Fetch weather alerts
+        const alertsResponse = await alertsAPI.getAlerts(districtId);
+        if (alertsResponse.success && alertsResponse.data) {
+          setAlerts(alertsResponse.data);
+        }
+
+        // Fetch market prices
+        const pricesResponse = await marketPriceAPI.getAll();
+        if (pricesResponse.success && pricesResponse.data) {
+          setMarketPrices(pricesResponse.data.slice(0, 3)); // Get top 3
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [districtId]);
+
+  // Extract weather data
+  const temperature = weather?.rawWeatherData?.main?.temp
+    ? Math.round(weather.rawWeatherData.main.temp)
+    : 32;
+  const humidity = weather?.rawWeatherData?.main?.humidity || 78;
+  const weatherDescription = weather?.rawWeatherData?.weather?.[0]?.description || "Partly Cloudy";
+  const windSpeed = weather?.rawWeatherData?.wind?.speed || 15;
+
+  // Get current date
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'short' });
+
   return (
     <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
       {/* Dashboard Navbar */}
@@ -14,15 +70,15 @@ export default function DashboardPage() {
         {/* Greeting Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="animate-fade-in-left">
-            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, Sunil!</h1>
+            <h1 className="text-2xl font-bold text-[#131613]">Ayubowan, {firstName}!</h1>
             <p className="text-gray-500 text-sm">
-              Here is your farming overview for today, <span className="text-primary font-medium">Tuesday, 24 Oct.</span>
+              Here is your farming overview for today, <span className="text-primary font-medium">{dateStr}.</span>
             </p>
           </div>
           <div className="flex gap-2 mt-3 md:mt-0 animate-fade-in-right delay-100">
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
               <span className="material-symbols-outlined text-sm text-gray-500">location_on</span>
-              Polonnaruwa
+              {districtName}
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-700 shadow-sm hover:shadow-md transition-shadow">
               <span className="material-symbols-outlined text-sm text-amber-500">star</span>
@@ -42,8 +98,10 @@ export default function DashboardPage() {
               <div className="flex-1">
                 <p className="text-gray-500 text-xs">Temperature</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-[#131613]">32°C</span>
-                  <span className="px-2 py-0.5 bg-green-500 text-white text-[10px] font-medium rounded-full">Good</span>
+                  <span className="text-xl font-bold text-[#131613]">{temperature}°C</span>
+                  <span className={`px-2 py-0.5 ${temperature > 35 ? 'bg-red-500' : temperature > 30 ? 'bg-orange-400' : 'bg-green-500'} text-white text-[10px] font-medium rounded-full`}>
+                    {temperature > 35 ? 'Hot' : temperature > 30 ? 'Warm' : 'Good'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -56,11 +114,9 @@ export default function DashboardPage() {
                 <span className="material-symbols-outlined text-blue-500 text-xl">rainy</span>
               </div>
               <div className="flex-1">
-                <p className="text-gray-500 text-xs">Rainfall Chance</p>
+                <p className="text-gray-500 text-xs">Weather</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-[#131613]">60%</span>
-                  <span className="px-2 py-0.5 bg-orange-400 text-white text-[10px] font-medium rounded-full">Normal</span>
-                  <span className="text-gray-400 text-[10px]">Light Showers</span>
+                  <span className="text-xl font-bold text-[#131613] capitalize">{weatherDescription}</span>
                 </div>
               </div>
             </div>
@@ -75,8 +131,10 @@ export default function DashboardPage() {
               <div className="flex-1">
                 <p className="text-gray-500 text-xs">Humidity</p>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-[#131613]">78%</span>
-                  <span className="px-2 py-0.5 bg-orange-500 text-white text-[10px] font-medium rounded-full">Risky</span>
+                  <span className="text-xl font-bold text-[#131613]">{humidity}%</span>
+                  <span className={`px-2 py-0.5 ${humidity > 80 ? 'bg-orange-500' : humidity > 60 ? 'bg-orange-400' : 'bg-green-500'} text-white text-[10px] font-medium rounded-full`}>
+                    {humidity > 80 ? 'Risky' : humidity > 60 ? 'Normal' : 'Low'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -94,9 +152,11 @@ export default function DashboardPage() {
                   <span className="material-symbols-outlined text-primary text-lg animate-pulse-subtle">add</span>
                   <span className="font-semibold text-sm text-[#131613]">AI Advisory Highlight</span>
                 </div>
-                <span className="px-2.5 py-1 bg-red-50 text-red-500 text-[10px] font-medium rounded-full border border-red-200 animate-pulse">
-                  Urgent Action
-                </span>
+                {alerts.length > 0 && (
+                  <span className="px-2.5 py-1 bg-red-50 text-red-500 text-[10px] font-medium rounded-full border border-red-200 animate-pulse">
+                    {alerts[0]?.severity || 'Alert'}
+                  </span>
+                )}
               </div>
 
               {/* Content */}
@@ -112,15 +172,22 @@ export default function DashboardPage() {
 
                 {/* Text Content */}
                 <div className="flex-1 p-4">
-                  <h3 className="text-lg font-bold text-[#131613] mb-2">High Pest Risk Detected</h3>
+                  <h3 className="text-lg font-bold text-[#131613] mb-2">
+                    {alerts.length > 0 ? alerts[0]?.title : 'Weather Advisory'}
+                  </h3>
                   <p className="text-gray-500 text-xs leading-relaxed mb-4">
-                    Based on the recent humidity levels of 78% and consistent cloud cover, our models predict a high risk of Brown Plant Hopper infestation in your area.
+                    {alerts.length > 0
+                      ? alerts[0]?.description
+                      : `Based on current conditions in ${districtName}, monitor your crops closely for any changes.`}
                   </p>
 
                   {/* Recommended Action */}
                   <div className="bg-amber-50 border-l-3 border-amber-400 p-3 rounded-r mb-4">
                     <p className="text-xs text-gray-700">
-                      <span className="text-amber-600 font-semibold">Recommended Action:</span> Apply organic neem spray within the next 24 hours to prevent outbreak spread. Monitor water levels closely.
+                      <span className="text-amber-600 font-semibold">Recommended Action:</span>{' '}
+                      {alerts.length > 0 && alerts[0]?.recommendations?.length > 0
+                        ? alerts[0].recommendations[0]
+                        : 'Monitor weather conditions and plan field activities accordingly.'}
                     </p>
                   </div>
 
@@ -180,41 +247,65 @@ export default function DashboardPage() {
               </div>
 
               <div className="space-y-3">
-                {/* Tomato */}
-                <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
-                  <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span className="text-lg">🍅</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-[#131613]">Tomato</p>
-                    <p className="text-[10px] text-gray-400">Dambulla Market</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-[#131613]">Rs. 180</p>
-                    <p className="text-[10px] text-green-500 flex items-center gap-0.5">
-                      <span className="material-symbols-outlined text-xs">trending_up</span>
-                      +5%
-                    </p>
-                  </div>
-                </div>
+                {marketPrices.length > 0 ? (
+                  marketPrices.map((item, index) => (
+                    <div key={index} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
+                      <div className="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span className="text-lg">🌾</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-[#131613]">{item.cropName || item.crop?.name || 'Crop'}</p>
+                        <p className="text-[10px] text-gray-400">{item.districtName || item.district?.name || 'Market'}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-[#131613]">Rs. {item.price || item.pricePerKg}</p>
+                        <p className={`text-[10px] flex items-center gap-0.5 ${item.changePercentage >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          <span className="material-symbols-outlined text-xs">
+                            {item.changePercentage >= 0 ? 'trending_up' : 'trending_down'}
+                          </span>
+                          {item.changePercentage >= 0 ? '+' : ''}{item.changePercentage || 0}%
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    {/* Fallback market items */}
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
+                      <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span className="text-lg">🍅</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-[#131613]">Tomato</p>
+                        <p className="text-[10px] text-gray-400">Dambulla Market</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-[#131613]">Rs. 180</p>
+                        <p className="text-[10px] text-green-500 flex items-center gap-0.5">
+                          <span className="material-symbols-outlined text-xs">trending_up</span>
+                          +5%
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Carrot */}
-                <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
-                  <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span className="text-lg">🥕</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-[#131613]">Carrot</p>
-                    <p className="text-[10px] text-gray-400">Nuwara Eliya</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-bold text-[#131613]">Rs. 220</p>
-                    <p className="text-[10px] text-red-500 flex items-center gap-0.5">
-                      <span className="material-symbols-outlined text-xs">trending_down</span>
-                      -2%
-                    </p>
-                  </div>
-                </div>
+                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group">
+                      <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span className="text-lg">🥕</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-[#131613]">Carrot</p>
+                        <p className="text-[10px] text-gray-400">Nuwara Eliya</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-[#131613]">Rs. 220</p>
+                        <p className="text-[10px] text-red-500 flex items-center gap-0.5">
+                          <span className="material-symbols-outlined text-xs">trending_down</span>
+                          -2%
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

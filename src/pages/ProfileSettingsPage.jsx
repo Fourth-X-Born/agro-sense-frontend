@@ -1,20 +1,30 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { profileAPI, masterDataAPI } from "../services/api";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 
 export default function ProfileSettingsPage() {
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState("profile");
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+    const [districts, setDistricts] = useState([]);
+
     const [formData, setFormData] = useState({
-        fullName: "Ruwan Perera",
-        email: "ruwan.p@example.com",
-        phone: "77 123 4567",
+        fullName: "",
+        email: "",
+        phone: "",
         language: "Sinhala",
-        district: "Polonnaruwa",
+        district: "",
+        districtId: null,
         primaryCrop: "Paddy (Rice)"
     });
-    const [selectedSecondaryCrops, setSelectedSecondaryCrops] = useState(["Vegetables"]);
+    const [selectedSecondaryCrops, setSelectedSecondaryCrops] = useState([]);
 
     const secondaryCropOptions = [
         { name: "Maize", icon: "grass" },
@@ -22,6 +32,67 @@ export default function ProfileSettingsPage() {
         { name: "Fruits", icon: "local_florist" },
         { name: "Spices", icon: "eco" }
     ];
+
+    // Fetch profile and districts on mount
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // Fetch districts
+                const districtsResponse = await masterDataAPI.getDistricts();
+                if (districtsResponse.success && districtsResponse.data) {
+                    setDistricts(districtsResponse.data);
+                }
+
+                // Fetch profile if user exists
+                if (user?.id) {
+                    const profileResponse = await profileAPI.get(user.id);
+                    if (profileResponse.success && profileResponse.data) {
+                        const profile = profileResponse.data;
+                        setFormData({
+                            fullName: profile.fullName || user.fullName || "",
+                            email: profile.email || user.email || "",
+                            phone: profile.phone || "",
+                            language: profile.language || "Sinhala",
+                            district: profile.districtName || profile.district?.name || "",
+                            districtId: profile.districtId || profile.district?.id || null,
+                            primaryCrop: profile.primaryCrop || "Paddy (Rice)"
+                        });
+                        setSelectedSecondaryCrops(profile.secondaryCrops || []);
+                    }
+                } else {
+                    // Use user data from auth context
+                    setFormData({
+                        fullName: user?.fullName || user?.name || "",
+                        email: user?.email || "",
+                        phone: user?.phone || "",
+                        language: "Sinhala",
+                        district: user?.district?.name || user?.districtName || "",
+                        districtId: user?.districtId || user?.district?.id || null,
+                        primaryCrop: "Paddy (Rice)"
+                    });
+                }
+            } catch (err) {
+                console.error("Error fetching profile:", err);
+                // Fallback to auth context user data
+                if (user) {
+                    setFormData({
+                        fullName: user.fullName || user.name || "",
+                        email: user.email || "",
+                        phone: user.phone || "",
+                        language: "Sinhala",
+                        district: user.district?.name || user.districtName || "",
+                        districtId: user.districtId || user.district?.id || null,
+                        primaryCrop: "Paddy (Rice)"
+                    });
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [user]);
 
     const toggleSecondaryCrop = (crop) => {
         if (selectedSecondaryCrops.includes(crop)) {
@@ -31,13 +102,54 @@ export default function ProfileSettingsPage() {
         }
     };
 
-    const districts = [
-        "Ampara", "Anuradhapura", "Badulla", "Batticaloa", "Colombo",
-        "Galle", "Gampaha", "Hambantota", "Jaffna", "Kalutara",
-        "Kandy", "Kegalle", "Kilinochchi", "Kurunegala", "Mannar",
-        "Matale", "Matara", "Monaragala", "Mullaitivu", "Nuwara Eliya",
-        "Polonnaruwa", "Puttalam", "Ratnapura", "Trincomalee", "Vavuniya"
-    ];
+    const handleSave = async () => {
+        if (!user?.id) {
+            setError("User not authenticated");
+            return;
+        }
+
+        setSaving(true);
+        setError("");
+        setSuccess("");
+
+        try {
+            const updateData = {
+                fullName: formData.fullName,
+                phone: formData.phone,
+                language: formData.language,
+                districtId: formData.districtId,
+                primaryCrop: formData.primaryCrop,
+                secondaryCrops: selectedSecondaryCrops
+            };
+
+            const response = await profileAPI.update(user.id, updateData);
+            if (response.success) {
+                setSuccess("Profile updated successfully!");
+                setTimeout(() => setSuccess(""), 3000);
+            } else {
+                setError(response.message || "Failed to update profile");
+            }
+        } catch (err) {
+            setError(err.message || "Failed to update profile");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate("/");
+    };
+
+    const handleDistrictChange = (e) => {
+        const selectedDistrictName = e.target.value;
+        const selectedDistrict = districts.find(d => d.name === selectedDistrictName);
+        setFormData({
+            ...formData,
+            district: selectedDistrictName,
+            districtId: selectedDistrict?.id || null
+        });
+    };
 
     return (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
@@ -54,249 +166,277 @@ export default function ProfileSettingsPage() {
 
             {/* Main Content */}
             <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6 animate-fade-in-up">
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Left Sidebar */}
-                    <div className="lg:w-64 flex-shrink-0 animate-fade-in-left delay-100">
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden sticky top-20">
-                            {/* Profile Header */}
-                            <div className="p-4 border-b border-gray-100">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
-                                        <img
-                                            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
-                                            alt="Profile"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-[#131613]">Ruwan Perera</p>
-                                        <span className="text-[10px] text-primary font-medium">Pro Plan</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Navigation Menu */}
-                            <div className="p-2">
-                                <button
-                                    onClick={() => setActiveTab("profile")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "profile" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    <span className="material-symbols-outlined text-base">person</span>
-                                    Profile
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("farm")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "farm" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    <span className="material-symbols-outlined text-base">agriculture</span>
-                                    Farm Details
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("security")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "security" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    <span className="material-symbols-outlined text-base">lock</span>
-                                    Security
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("language")}
-                                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "language" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    <span className="material-symbols-outlined text-base">language</span>
-                                    Language
-                                </button>
-                            </div>
-
-                            {/* Logout */}
-                            <div className="p-2 border-t border-gray-100">
-                                <button
-                                    onClick={() => navigate("/")}
-                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
-                                >
-                                    <span className="material-symbols-outlined text-base">logout</span>
-                                    Logout
-                                </button>
-                            </div>
+                {loading ? (
+                    <div className="flex items-center justify-center h-64">
+                        <div className="text-center">
+                            <span className="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
+                            <p className="text-gray-500 mt-2">Loading profile...</p>
                         </div>
                     </div>
-
-                    {/* Right Content */}
-                    <div className="flex-1 animate-fade-in-right delay-200">
-                        <div className="bg-white rounded-xl border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-md">
-                            {/* Content Header */}
-                            <div className="flex items-center justify-between p-5 border-b border-gray-100">
-                                <div>
-                                    <h2 className="text-base font-bold text-[#131613]">Profile Information</h2>
-                                    <p className="text-xs text-gray-500">Update your personal details and agricultural preferences.</p>
+                ) : (
+                    <div className="flex flex-col lg:flex-row gap-6">
+                        {/* Left Sidebar */}
+                        <div className="lg:w-64 flex-shrink-0 animate-fade-in-left delay-100">
+                            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden sticky top-20">
+                                {/* Profile Header */}
+                                <div className="p-4 border-b border-gray-100">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                                            <span className="text-primary text-lg font-bold">
+                                                {formData.fullName?.charAt(0) || 'U'}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-[#131613]">{formData.fullName || 'User'}</p>
+                                            <span className="text-[10px] text-primary font-medium">Pro Plan</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex gap-2">
-                                    <button className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors">
-                                        Cancel
+
+                                {/* Navigation Menu */}
+                                <div className="p-2">
+                                    <button
+                                        onClick={() => setActiveTab("profile")}
+                                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "profile" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
+                                            }`}
+                                    >
+                                        <span className="material-symbols-outlined text-base">person</span>
+                                        Profile
                                     </button>
-                                    <button className="px-4 py-2 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm hover:shadow hover:-translate-y-0.5">
-                                        Save Changes
+                                    <button
+                                        onClick={() => setActiveTab("farm")}
+                                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "farm" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
+                                            }`}
+                                    >
+                                        <span className="material-symbols-outlined text-base">agriculture</span>
+                                        Farm Details
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("security")}
+                                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "security" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
+                                            }`}
+                                    >
+                                        <span className="material-symbols-outlined text-base">lock</span>
+                                        Security
+                                    </button>
+                                    <button
+                                        onClick={() => setActiveTab("language")}
+                                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${activeTab === "language" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-50"
+                                            }`}
+                                    >
+                                        <span className="material-symbols-outlined text-base">language</span>
+                                        Language
+                                    </button>
+                                </div>
+
+                                {/* Logout */}
+                                <div className="p-2 border-t border-gray-100">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-red-500 hover:bg-red-50 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-base">logout</span>
+                                        Logout
                                     </button>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Form Content */}
-                            <div className="p-5 space-y-6">
-                                {/* Personal Details */}
-                                <div className="animate-fade-in-up delay-300">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <span className="material-symbols-outlined text-primary text-base">badge</span>
-                                        <span className="text-sm font-semibold text-[#131613]">Personal Details</span>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {/* Full Name */}
-                                        <div>
-                                            <label className="text-[10px] font-medium text-gray-500 block mb-1">Full Name</label>
-                                            <input
-                                                type="text"
-                                                value={formData.fullName}
-                                                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary transition-colors"
-                                            />
-                                        </div>
-
-                                        {/* Email Address */}
-                                        <div>
-                                            <label className="text-[10px] font-medium text-gray-500 block mb-1">Email Address</label>
-                                            <input
-                                                type="email"
-                                                value={formData.email}
-                                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary transition-colors"
-                                            />
-                                        </div>
-
-                                        {/* Phone Number */}
-                                        <div>
-                                            <label className="text-[10px] font-medium text-gray-500 block mb-1">Phone Number</label>
-                                            <div className="flex">
-                                                <span className="h-10 px-3 flex items-center bg-gray-50 border border-r-0 border-gray-200 rounded-l-lg text-xs text-gray-500">+94</span>
-                                                <input
-                                                    type="tel"
-                                                    value={formData.phone}
-                                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                                    className="flex-1 h-10 px-3 rounded-r-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary transition-colors"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Preferred Language */}
-                                        <div>
-                                            <label className="text-[10px] font-medium text-gray-500 block mb-1">Preferred Language</label>
-                                            <select
-                                                value={formData.language}
-                                                onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
-                                            >
-                                                <option value="Sinhala">Sinhala</option>
-                                                <option value="Tamil">Tamil</option>
-                                                <option value="English">English</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Agricultural Context */}
-                                <div className="pt-4 border-t border-gray-100 animate-fade-in-up delay-500">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <span className="material-symbols-outlined text-primary text-base">trending_up</span>
-                                        <span className="text-sm font-semibold text-[#131613]">Agricultural Context</span>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                        {/* Farming District */}
-                                        <div>
-                                            <label className="text-[10px] font-medium text-gray-500 block mb-1">Farming District</label>
-                                            <select
-                                                value={formData.district}
-                                                onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
-                                            >
-                                                {districts.map(d => (
-                                                    <option key={d} value={d}>{d}</option>
-                                                ))}
-                                            </select>
-                                            <p className="text-[9px] text-gray-400 mt-1">This helps us provide localized weather and soil advisory.</p>
-                                        </div>
-
-                                        {/* Primary Crop */}
-                                        <div>
-                                            <label className="text-[10px] font-medium text-gray-500 block mb-1">Primary Crop</label>
-                                            <select
-                                                value={formData.primaryCrop}
-                                                onChange={(e) => setFormData({ ...formData, primaryCrop: e.target.value })}
-                                                className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
-                                            >
-                                                <option value="Paddy (Rice)">Paddy (Rice)</option>
-                                                <option value="Vegetables">Vegetables</option>
-                                                <option value="Tea">Tea</option>
-                                                <option value="Coconut">Coconut</option>
-                                                <option value="Rubber">Rubber</option>
-                                            </select>
-                                            <p className="text-[9px] text-primary mt-1 flex items-center gap-0.5">
-                                                <span className="material-symbols-outlined text-xs">info</span>
-                                                AI advisory will update based on this selection.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* Secondary Crops */}
+                        {/* Right Content */}
+                        <div className="flex-1 animate-fade-in-right delay-200">
+                            <div className="bg-white rounded-xl border border-gray-100 shadow-sm transition-all duration-300 hover:shadow-md">
+                                {/* Content Header */}
+                                <div className="flex items-center justify-between p-5 border-b border-gray-100">
                                     <div>
-                                        <label className="text-[10px] font-medium text-gray-500 block mb-2">Secondary Crops (Select up to 3)</label>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                            {secondaryCropOptions.map((crop) => (
-                                                <button
-                                                    key={crop.name}
-                                                    onClick={() => toggleSecondaryCrop(crop.name)}
-                                                    className={`relative p-4 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${selectedSecondaryCrops.includes(crop.name)
-                                                        ? "border-primary bg-primary/5"
-                                                        : "border-gray-200 hover:border-gray-300"
-                                                        }`}
-                                                >
-                                                    {selectedSecondaryCrops.includes(crop.name) && (
-                                                        <span className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center animate-scale-in">
-                                                            <span className="material-symbols-outlined text-white text-xs">check</span>
-                                                        </span>
-                                                    )}
-                                                    <span className={`material-symbols-outlined text-2xl mb-2 ${selectedSecondaryCrops.includes(crop.name) ? "text-primary" : "text-gray-400"
-                                                        }`}>{crop.icon}</span>
-                                                    <p className="text-xs font-medium text-[#131613]">{crop.name}</p>
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <h2 className="text-base font-bold text-[#131613]">Profile Information</h2>
+                                        <p className="text-xs text-gray-500">Update your personal details and agricultural preferences.</p>
                                     </div>
-                                </div>
-
-                                {/* Security */}
-                                <div className="pt-4 border-t border-gray-100 animate-fade-in-up delay-700">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <span className="material-symbols-outlined text-primary text-base">shield</span>
-                                        <span className="text-sm font-semibold text-[#131613]">Security</span>
-                                    </div>
-
-                                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-colors hover:bg-gray-100">
-                                        <div>
-                                            <p className="text-xs font-medium text-[#131613]">Password</p>
-                                            <p className="text-[10px] text-gray-400">Last changed 3 months ago</p>
-                                        </div>
-                                        <button className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-white transition-colors">
-                                            Change Password
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => window.location.reload()}
+                                            className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleSave}
+                                            disabled={saving}
+                                            className="px-4 py-2 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors shadow-sm hover:shadow hover:-translate-y-0.5 disabled:opacity-50"
+                                        >
+                                            {saving ? 'Saving...' : 'Save Changes'}
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* Status Messages */}
+                                {error && (
+                                    <div className="mx-5 mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <p className="text-xs text-red-600">{error}</p>
+                                    </div>
+                                )}
+                                {success && (
+                                    <div className="mx-5 mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                        <p className="text-xs text-green-600">{success}</p>
+                                    </div>
+                                )}
+
+                                {/* Form Content */}
+                                <div className="p-5 space-y-6">
+                                    {/* Personal Details */}
+                                    <div className="animate-fade-in-up delay-300">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <span className="material-symbols-outlined text-primary text-base">badge</span>
+                                            <span className="text-sm font-semibold text-[#131613]">Personal Details</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Full Name */}
+                                            <div>
+                                                <label className="text-[10px] font-medium text-gray-500 block mb-1">Full Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.fullName}
+                                                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                                                    className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary transition-colors"
+                                                />
+                                            </div>
+
+                                            {/* Email Address */}
+                                            <div>
+                                                <label className="text-[10px] font-medium text-gray-500 block mb-1">Email Address</label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.email}
+                                                    disabled
+                                                    className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-gray-400 bg-gray-50"
+                                                />
+                                                <p className="text-[9px] text-gray-400 mt-1">Email cannot be changed</p>
+                                            </div>
+
+                                            {/* Phone Number */}
+                                            <div>
+                                                <label className="text-[10px] font-medium text-gray-500 block mb-1">Phone Number</label>
+                                                <div className="flex">
+                                                    <span className="h-10 px-3 flex items-center bg-gray-50 border border-r-0 border-gray-200 rounded-l-lg text-xs text-gray-500">+94</span>
+                                                    <input
+                                                        type="tel"
+                                                        value={formData.phone}
+                                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                        className="flex-1 h-10 px-3 rounded-r-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary transition-colors"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Preferred Language */}
+                                            <div>
+                                                <label className="text-[10px] font-medium text-gray-500 block mb-1">Preferred Language</label>
+                                                <select
+                                                    value={formData.language}
+                                                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                                                    className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
+                                                >
+                                                    <option value="Sinhala">Sinhala</option>
+                                                    <option value="Tamil">Tamil</option>
+                                                    <option value="English">English</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Agricultural Context */}
+                                    <div className="pt-4 border-t border-gray-100 animate-fade-in-up delay-500">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <span className="material-symbols-outlined text-primary text-base">trending_up</span>
+                                            <span className="text-sm font-semibold text-[#131613]">Agricultural Context</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            {/* Farming District */}
+                                            <div>
+                                                <label className="text-[10px] font-medium text-gray-500 block mb-1">Farming District</label>
+                                                <select
+                                                    value={formData.district}
+                                                    onChange={handleDistrictChange}
+                                                    className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
+                                                >
+                                                    <option value="">Select a district</option>
+                                                    {districts.map(d => (
+                                                        <option key={d.id} value={d.name}>{d.name}</option>
+                                                    ))}
+                                                </select>
+                                                <p className="text-[9px] text-gray-400 mt-1">This helps us provide localized weather and soil advisory.</p>
+                                            </div>
+
+                                            {/* Primary Crop */}
+                                            <div>
+                                                <label className="text-[10px] font-medium text-gray-500 block mb-1">Primary Crop</label>
+                                                <select
+                                                    value={formData.primaryCrop}
+                                                    onChange={(e) => setFormData({ ...formData, primaryCrop: e.target.value })}
+                                                    className="w-full h-10 px-3 rounded-lg border border-gray-200 text-xs text-[#131613] focus:outline-none focus:border-primary bg-white transition-colors"
+                                                >
+                                                    <option value="Paddy (Rice)">Paddy (Rice)</option>
+                                                    <option value="Vegetables">Vegetables</option>
+                                                    <option value="Tea">Tea</option>
+                                                    <option value="Coconut">Coconut</option>
+                                                    <option value="Rubber">Rubber</option>
+                                                </select>
+                                                <p className="text-[9px] text-primary mt-1 flex items-center gap-0.5">
+                                                    <span className="material-symbols-outlined text-xs">info</span>
+                                                    AI advisory will update based on this selection.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Secondary Crops */}
+                                        <div>
+                                            <label className="text-[10px] font-medium text-gray-500 block mb-2">Secondary Crops (Select up to 3)</label>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                {secondaryCropOptions.map((crop) => (
+                                                    <button
+                                                        key={crop.name}
+                                                        onClick={() => toggleSecondaryCrop(crop.name)}
+                                                        className={`relative p-4 rounded-xl border-2 transition-all hover:scale-105 active:scale-95 ${selectedSecondaryCrops.includes(crop.name)
+                                                            ? "border-primary bg-primary/5"
+                                                            : "border-gray-200 hover:border-gray-300"
+                                                            }`}
+                                                    >
+                                                        {selectedSecondaryCrops.includes(crop.name) && (
+                                                            <span className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center animate-scale-in">
+                                                                <span className="material-symbols-outlined text-white text-xs">check</span>
+                                                            </span>
+                                                        )}
+                                                        <span className={`material-symbols-outlined text-2xl mb-2 ${selectedSecondaryCrops.includes(crop.name) ? "text-primary" : "text-gray-400"
+                                                            }`}>{crop.icon}</span>
+                                                        <p className="text-xs font-medium text-[#131613]">{crop.name}</p>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Security */}
+                                    <div className="pt-4 border-t border-gray-100 animate-fade-in-up delay-700">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <span className="material-symbols-outlined text-primary text-base">shield</span>
+                                            <span className="text-sm font-semibold text-[#131613]">Security</span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg transition-colors hover:bg-gray-100">
+                                            <div>
+                                                <p className="text-xs font-medium text-[#131613]">Password</p>
+                                                <p className="text-[10px] text-gray-400">Last changed 3 months ago</p>
+                                            </div>
+                                            <button className="px-4 py-2 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-white transition-colors">
+                                                Change Password
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                )}
             </main>
 
             {/* Footer */}

@@ -86,24 +86,36 @@ const adminService = {
         return response;
     },
 
+    // ==================== GROWTH STAGES ====================
+    getGrowthStages: async () => {
+        const response = await api.get('/admin/growth-stages');
+        return response;
+    },
+
     // ==================== CROP GUIDES ====================
     getCropGuides: async () => {
-        const response = await api.get('/admin/crop-guides');
+        const response = await api.get('/admin/crop-guidelines');
         return response;
     },
 
     createCropGuide: async (guideData) => {
-        const response = await api.post('/admin/crop-guides', guideData);
+        const response = await api.post('/admin/crop-guidelines', guideData);
         return response;
     },
 
     updateCropGuide: async (id, guideData) => {
-        const response = await api.put(`/admin/crop-guides/${id}`, guideData);
+        const response = await api.put(`/admin/crop-guidelines/${id}`, guideData);
         return response;
     },
 
     deleteCropGuide: async (id) => {
-        const response = await api.delete(`/admin/crop-guides/${id}`);
+        const response = await api.delete(`/admin/crop-guidelines/${id}`);
+        return response;
+    },
+
+    // ==================== FARMERS ====================
+    getFarmers: async () => {
+        const response = await api.get('/admin/farmers');
         return response;
     },
 };

@@ -5,26 +5,23 @@ import adminService from "../../services/adminService";
 export default function AdminCropGuidePage() {
     const [formData, setFormData] = useState({
         cropId: "",
-        season: "",
-        growthStage: "",
-        daysRange: "",
-        waterDepth: "",
-        temperature: "",
-        guidelines: "",
-        status: "Active",
+        stageId: "",
+        guidelineType: "DO",
+        description: "",
+        priority: 1,
     });
 
-    const [cropGuides, setCropGuides] = useState([]);
+    const [cropGuidelines, setCropGuidelines] = useState([]);
     const [crops, setCrops] = useState([]);
+    const [growthStages, setGrowthStages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [filterType, setFilterType] = useState("all");
 
-    const seasons = ["Dry Season", "Wet Season"];
-    const statuses = ["Active", "Inactive"];
-    const growthStages = ["Seedling", "Vegetative", "Flowering", "Harvest"];
+    const guidelineTypes = ["DO", "DONT"];
 
     useEffect(() => {
         fetchData();
@@ -33,17 +30,19 @@ export default function AdminCropGuidePage() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [guidesRes, cropsRes] = await Promise.all([
+            const [guidelinesRes, cropsRes, stagesRes] = await Promise.all([
                 adminService.getCropGuides(),
                 adminService.getCrops(),
+                adminService.getGrowthStages ? adminService.getGrowthStages() : Promise.resolve([]),
             ]);
-            setCropGuides(guidesRes || []);
+            setCropGuidelines(guidelinesRes || []);
             setCrops(cropsRes || []);
+            setGrowthStages(stagesRes || []);
             setError(null);
         } catch (err) {
             console.error("Error fetching data:", err);
             setError("Failed to load data");
-            setCropGuides([]);
+            setCropGuidelines([]);
         } finally {
             setLoading(false);
         }
@@ -57,21 +56,18 @@ export default function AdminCropGuidePage() {
     const resetForm = () => {
         setFormData({
             cropId: "",
-            season: "",
-            growthStage: "",
-            daysRange: "",
-            waterDepth: "",
-            temperature: "",
-            guidelines: "",
-            status: "Active",
+            stageId: "",
+            guidelineType: "DO",
+            description: "",
+            priority: 1,
         });
         setEditingId(null);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.cropId || !formData.season || !formData.growthStage || !formData.daysRange) {
-            alert("Please fill in required fields (Crop, Season, Growth Stage, Days Range)");
+        if (!formData.cropId || !formData.guidelineType || !formData.description) {
+            alert("Please fill in required fields (Crop, Type, Description)");
             return;
         }
 
@@ -79,13 +75,10 @@ export default function AdminCropGuidePage() {
             setSubmitting(true);
             const payload = {
                 cropId: parseInt(formData.cropId),
-                season: formData.season,
-                growthStage: formData.growthStage,
-                daysRange: formData.daysRange,
-                waterDepth: formData.waterDepth,
-                temperature: formData.temperature,
-                guidelines: formData.guidelines,
-                status: formData.status,
+                stageId: formData.stageId ? parseInt(formData.stageId) : null,
+                guidelineType: formData.guidelineType,
+                description: formData.description,
+                priority: parseInt(formData.priority) || 1,
             };
 
             if (editingId) {
@@ -97,75 +90,83 @@ export default function AdminCropGuidePage() {
             resetForm();
             fetchData();
         } catch (err) {
-            console.error("Error saving crop guide:", err);
-            alert("Failed to save crop guide");
+            console.error("Error saving guideline:", err);
+            alert("Failed to save guideline");
         } finally {
             setSubmitting(false);
         }
     };
 
-    const handleEdit = (guide) => {
+    const handleEdit = (guideline) => {
         setFormData({
-            cropId: guide.cropId || guide.crop?.id || "",
-            season: guide.season || "",
-            growthStage: guide.growthStage || "",
-            daysRange: guide.daysRange || "",
-            waterDepth: guide.waterDepth || "",
-            temperature: guide.temperature || "",
-            guidelines: guide.guidelines || "",
-            status: guide.status || "Active",
+            cropId: guideline.crop?.id || guideline.cropId || "",
+            stageId: guideline.stage?.id || guideline.stageId || "",
+            guidelineType: guideline.guidelineType || "DO",
+            description: guideline.description || "",
+            priority: guideline.priority || 1,
         });
-        setEditingId(guide.id);
+        setEditingId(guideline.id);
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Are you sure you want to delete this crop guide?")) return;
+        if (!confirm("Are you sure you want to delete this guideline?")) return;
         try {
             await adminService.deleteCropGuide(id);
             fetchData();
         } catch (err) {
-            console.error("Error deleting crop guide:", err);
+            console.error("Error deleting guideline:", err);
             alert("Failed to delete");
         }
     };
 
-    const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case "active": return "bg-green-100 text-green-700";
-            case "inactive": return "bg-gray-100 text-gray-700";
+    const getTypeColor = (type) => {
+        switch (type?.toUpperCase()) {
+            case "DO": return "bg-green-100 text-green-700";
+            case "DONT": return "bg-red-100 text-red-700";
             default: return "bg-gray-100 text-gray-700";
         }
     };
 
-    const getSeasonColor = (season) => {
-        switch (season?.toLowerCase()) {
-            case "dry season": return "bg-orange-100 text-orange-700";
-            case "wet season": return "bg-blue-100 text-blue-700";
-            default: return "bg-gray-100 text-gray-700";
-        }
+    // Get crop name helper
+    const getCropName = (guideline) => {
+        return guideline.crop?.name || crops.find(c => c.id === guideline.cropId)?.name || "Unknown";
     };
 
-    // Filter crop guides based on search
-    const filteredGuides = cropGuides.filter((guide) =>
-        guide.cropName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        guide.crop?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        guide.growthStage?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    // Get stage name helper
+    const getStageName = (guideline) => {
+        if (!guideline.stage && !guideline.stageId) return "All Stages";
+        return guideline.stage?.stageName || growthStages.find(s => s.id === guideline.stageId)?.stageName || "All Stages";
+    };
+
+    // Get available stages for selected crop
+    const getStagesForCrop = () => {
+        if (!formData.cropId) return [];
+        return growthStages.filter(stage => stage.crop?.id === parseInt(formData.cropId) || stage.cropId === parseInt(formData.cropId));
+    };
+
+    // Filter guidelines
+    const filteredGuidelines = cropGuidelines.filter((guideline) => {
+        const matchesSearch = 
+            getCropName(guideline).toLowerCase().includes(searchQuery.toLowerCase()) ||
+            guideline.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesType = filterType === "all" || guideline.guidelineType?.toUpperCase() === filterType;
+        return matchesSearch && matchesType;
+    });
 
     return (
         <AdminLayout>
             <div className="animate-fade-in">
                 {/* Header */}
                 <div className="mb-6 animate-fade-in-up">
-                    <h1 className="text-2xl font-bold text-[#131613]">Crop Guides</h1>
+                    <h1 className="text-2xl font-bold text-[#131613]">Crop Guidelines</h1>
                     <p className="text-gray-500 text-sm mt-1">
-                        Manage growth stage guides and recommendations for different crops.
+                        Manage DO's and DON'T guidelines for different crops and growth stages.
                     </p>
                 </div>
 
                 {/* Search and Controls */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-6 animate-fade-in-up delay-100">
-                    <div className="p-4 flex items-center justify-between gap-4">
+                    <div className="p-4 flex flex-col md:flex-row items-center justify-between gap-4">
                         {/* Search Input */}
                         <div className="relative flex-1 max-w-md">
                             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
@@ -173,24 +174,30 @@ export default function AdminCropGuidePage() {
                             </span>
                             <input
                                 type="text"
-                                placeholder="Search crop guides..."
+                                placeholder="Search guidelines..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                             />
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2">
+                        {/* Filter & Action Buttons */}
+                        <div className="flex items-center gap-3">
+                            <select
+                                value={filterType}
+                                onChange={(e) => setFilterType(e.target.value)}
+                                className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                            >
+                                <option value="all">All Types</option>
+                                <option value="DO">DO's Only</option>
+                                <option value="DONT">DON'T's Only</option>
+                            </select>
                             <button
                                 onClick={fetchData}
                                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                 title="Refresh"
                             >
                                 <span className="material-symbols-outlined text-gray-500">refresh</span>
-                            </button>
-                            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                <span className="material-symbols-outlined text-gray-500">download</span>
                             </button>
                         </div>
                     </div>
@@ -199,7 +206,7 @@ export default function AdminCropGuidePage() {
                     {loading && (
                         <div className="p-8 text-center text-gray-500">
                             <span className="material-symbols-outlined animate-spin text-2xl">progress_activity</span>
-                            <p className="mt-2">Loading crop guides...</p>
+                            <p className="mt-2">Loading guidelines...</p>
                         </div>
                     )}
 
@@ -221,46 +228,48 @@ export default function AdminCropGuidePage() {
                                 <thead>
                                     <tr className="border-t border-b border-gray-100 bg-gray-50/50">
                                         <th className="text-left py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Crop</th>
-                                        <th className="text-left py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Season</th>
-                                        <th className="text-left py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Growth Stage</th>
-                                        <th className="text-left py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Days</th>
-                                        <th className="text-left py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                        <th className="text-left py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Stage</th>
+                                        <th className="text-left py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                                        <th className="text-left py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Description</th>
+                                        <th className="text-left py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Priority</th>
                                         <th className="text-right py-3 px-5 text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredGuides.length === 0 ? (
+                                    {filteredGuidelines.length === 0 ? (
                                         <tr>
                                             <td colSpan="6" className="py-8 text-center text-gray-400">
-                                                No crop guides found
+                                                No guidelines found
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredGuides.map((guide, index) => (
+                                        filteredGuidelines.map((guideline, index) => (
                                             <tr
-                                                key={guide.id}
+                                                key={guideline.id}
                                                 className="border-b border-gray-50 hover:bg-gray-50 transition-colors animate-fade-in"
                                                 style={{ animationDelay: `${index * 50}ms` }}
                                             >
                                                 <td className="py-4 px-5 text-sm font-medium text-[#131613]">
-                                                    {guide.cropName || guide.crop?.name}
+                                                    {getCropName(guideline)}
+                                                </td>
+                                                <td className="py-4 px-5 text-sm text-gray-600">
+                                                    {getStageName(guideline)}
                                                 </td>
                                                 <td className="py-4 px-5">
-                                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getSeasonColor(guide.season)}`}>
-                                                        {guide.season}
+                                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(guideline.guidelineType)}`}>
+                                                        {guideline.guidelineType === "DO" ? "DO" : "DON'T"}
                                                     </span>
                                                 </td>
-                                                <td className="py-4 px-5 text-sm text-gray-600">{guide.growthStage}</td>
-                                                <td className="py-4 px-5 text-sm text-gray-500">{guide.daysRange}</td>
-                                                <td className="py-4 px-5">
-                                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(guide.status)}`}>
-                                                        {guide.status}
-                                                    </span>
+                                                <td className="py-4 px-5 text-sm text-gray-600 max-w-xs truncate" title={guideline.description}>
+                                                    {guideline.description}
+                                                </td>
+                                                <td className="py-4 px-5 text-sm text-gray-500">
+                                                    {guideline.priority || "-"}
                                                 </td>
                                                 <td className="py-4 px-5">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
-                                                            onClick={() => handleEdit(guide)}
+                                                            onClick={() => handleEdit(guideline)}
                                                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors group"
                                                         >
                                                             <span className="material-symbols-outlined text-gray-400 text-lg group-hover:text-gray-600">
@@ -268,7 +277,7 @@ export default function AdminCropGuidePage() {
                                                             </span>
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDelete(guide.id)}
+                                                            onClick={() => handleDelete(guideline.id)}
                                                             className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
                                                         >
                                                             <span className="material-symbols-outlined text-gray-400 text-lg group-hover:text-red-500">
@@ -290,16 +299,16 @@ export default function AdminCropGuidePage() {
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 animate-fade-in-up delay-200">
                     <div className="mb-5">
                         <h3 className="text-base font-bold text-[#131613]">
-                            {editingId ? "Edit" : "Add New"} Crop Guide
+                            {editingId ? "Edit" : "Add New"} Guideline
                         </h3>
                         <p className="text-gray-400 text-xs mt-1">
-                            Enter details for crop growth stage guidelines.
+                            Enter DO's or DON'T's for crop cultivation.
                         </p>
                     </div>
 
                     <form onSubmit={handleSubmit}>
-                        {/* Row 1: Crop, Season, Growth Stage */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        {/* Row 1: Crop, Stage, Type, Priority */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-2">Target Crop *</label>
                                 <select
@@ -315,92 +324,54 @@ export default function AdminCropGuidePage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">Season *</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-2">Growth Stage</label>
                                 <select
-                                    name="season"
-                                    value={formData.season}
+                                    name="stageId"
+                                    value={formData.stageId}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                                    disabled={!formData.cropId}
                                 >
-                                    <option value="">Select Season...</option>
-                                    {seasons.map((season) => (
-                                        <option key={season} value={season}>{season}</option>
+                                    <option value="">All Stages</option>
+                                    {getStagesForCrop().map((stage) => (
+                                        <option key={stage.id} value={stage.id}>{stage.stageName}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">Growth Stage *</label>
+                                <label className="block text-xs font-medium text-gray-600 mb-2">Type *</label>
                                 <select
-                                    name="growthStage"
-                                    value={formData.growthStage}
+                                    name="guidelineType"
+                                    value={formData.guidelineType}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
                                 >
-                                    <option value="">Select Stage...</option>
-                                    {growthStages.map((stage) => (
-                                        <option key={stage} value={stage}>{stage}</option>
+                                    {guidelineTypes.map((type) => (
+                                        <option key={type} value={type}>{type === "DO" ? "DO (Recommended)" : "DON'T (Avoid)"}</option>
                                     ))}
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-2">Priority</label>
+                                <input
+                                    type="number"
+                                    name="priority"
+                                    min="1"
+                                    max="100"
+                                    value={formData.priority}
+                                    onChange={handleInputChange}
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                />
                             </div>
                         </div>
 
-                        {/* Row 2: Days Range, Water Depth, Temperature, Status */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">Days Range *</label>
-                                <input
-                                    type="text"
-                                    name="daysRange"
-                                    placeholder="e.g. Day 0-14"
-                                    value={formData.daysRange}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">Water Depth</label>
-                                <input
-                                    type="text"
-                                    name="waterDepth"
-                                    placeholder="e.g. 5 cm"
-                                    value={formData.waterDepth}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">Temperature</label>
-                                <input
-                                    type="text"
-                                    name="temperature"
-                                    placeholder="e.g. 25-30°C"
-                                    value={formData.temperature}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">Status *</label>
-                                <select
-                                    name="status"
-                                    value={formData.status}
-                                    onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
-                                >
-                                    {statuses.map((status) => (
-                                        <option key={status} value={status}>{status}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Row 3: Guidelines */}
+                        {/* Row 2: Description */}
                         <div className="mb-6">
-                            <label className="block text-xs font-medium text-gray-600 mb-2">Guidelines</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-2">Description *</label>
                             <textarea
-                                name="guidelines"
-                                placeholder="Enter growth stage guidelines, recommendations, and best practices..."
-                                value={formData.guidelines}
+                                name="description"
+                                placeholder="Enter the guideline description..."
+                                value={formData.description}
                                 onChange={handleInputChange}
                                 rows={3}
                                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
@@ -426,7 +397,7 @@ export default function AdminCropGuidePage() {
                                 ) : (
                                     <span className="material-symbols-outlined text-lg">{editingId ? "save" : "add"}</span>
                                 )}
-                                {submitting ? "Saving..." : (editingId ? "Update Guide" : "Save Guide")}
+                                {submitting ? "Saving..." : (editingId ? "Update Guideline" : "Add Guideline")}
                             </button>
                         </div>
                     </form>

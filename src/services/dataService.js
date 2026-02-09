@@ -102,6 +102,13 @@ const dataService = {
         const response = await api.put(`/profile/update?farmerId=${farmerId}`, profileData);
         return response;
     },
+
+    // ==================== CROP GUIDE ====================
+    // Get crop guide by cropId (public endpoint)
+    getCropGuide: async (cropId) => {
+        const response = await api.get(`/crop-guide/${cropId}`);
+        return response;
+    },
 };
 
 export default dataService;

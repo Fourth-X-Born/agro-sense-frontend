@@ -7,13 +7,14 @@ const Navbar = () => {
             <div className="flex justify-center w-full">
                 <div className="flex items-center justify-between w-full max-w-[1200px] px-6 py-3">
                     <Link to="/" className="flex items-center gap-2 cursor-pointer mr-auto group">
-                        <div className="w-3 h-3 rounded-full bg-primary group-hover:animate-pulse-subtle"></div>
+                        <span className="material-symbols-outlined text-primary text-xl group-hover:animate-pulse-subtle">spa</span>
                         <h2 className="text-base font-bold leading-tight tracking-[-0.015em]"><span className="text-[#131613]">Agro</span><span className="text-primary">Sense</span> <span className="text-[#131613]">AI</span></h2>
                     </Link>
                     <nav className="hidden md:flex items-center justify-center gap-10">
-                        <a className="text-[#131613] text-sm font-normal hover:text-primary transition-colors link-underline" href="#">Home</a>
-                        <a className="text-[#131613] text-sm font-normal hover:text-primary transition-colors link-underline" href="#features">Features</a>
-                        <a className="text-[#131613] text-sm font-normal hover:text-primary transition-colors link-underline" href="#how-it-works">How it works</a>
+                        <a className="text-[#131613] text-sm font-normal hover:text-primary transition-colors link-underline" href="/#">Home</a>
+                        <a className="text-[#131613] text-sm font-normal hover:text-primary transition-colors link-underline" href="/#features">Features</a>
+                        <a className="text-[#131613] text-sm font-normal hover:text-primary transition-colors link-underline" href="/#how-it-works">How it works</a>
+                        <Link className="text-[#131613] text-sm font-normal hover:text-primary transition-colors link-underline" to="/contact-us">Contact Us</Link>
                     </nav>
                     <div className="flex gap-2 ml-auto">
                         <Link

@@ -18,7 +18,7 @@ const DashboardNavbar = () => {
             <div className="flex items-center justify-between max-w-[1200px] mx-auto px-6 py-3">
                 {/* Logo */}
                 <Link to="/dashboard" className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-primary"></div>
+                    <span className="material-symbols-outlined text-primary text-xl">spa</span>
                     <span className="text-[#131613] text-sm font-bold">Agro<span className="text-primary">Sense</span> AI</span>
                 </Link>
 

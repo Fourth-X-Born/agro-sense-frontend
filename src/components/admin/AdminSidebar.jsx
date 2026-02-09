@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import adminAuthService from "../../services/adminAuthService";
 
 const AdminSidebar = () => {
     const location = useLocation();
@@ -16,20 +17,23 @@ const AdminSidebar = () => {
     ];
 
     const handleSignOut = () => {
-        // Clear any auth tokens/state here if needed
-        navigate("/login");
+        // Clear admin auth tokens/state
+        adminAuthService.logout();
+        navigate("/admin/login");
     };
 
     return (
         <aside className="fixed left-0 top-0 h-screen w-[200px] bg-white border-r border-gray-100 flex flex-col animate-fade-in-left">
             {/* Logo */}
-            <div className="px-5 py-5 border-b border-gray-100">
-                <Link to="/admin" className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-primary"></div>
-                    <span className="text-[#131613] text-sm font-bold">
-                        Agro<span className="text-primary">Sense</span> AI
-                    </span>
-                    <span className="ml-1 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded">
+            <div className="px-4 py-5 border-b border-gray-100">
+                <Link to="/admin" className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-xl flex-shrink-0">spa</span>
+                        <span className="text-[#131613] text-sm font-bold whitespace-nowrap">
+                            Agro<span className="text-primary">Sense</span> AI
+                        </span>
+                    </div>
+                    <span className="ml-7 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded w-fit">
                         Admin
                     </span>
                 </Link>

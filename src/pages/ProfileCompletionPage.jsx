@@ -111,6 +111,18 @@ export default function ProfileCompletionPage() {
             });
 
             if (response.success) {
+                // Manually update local user with names since backend might not return them immediately
+                const currentUser = authService.getCurrentUser();
+                const updatedUser = {
+                    ...currentUser,
+                    district: formData.districtName,
+                    crop: formData.cropName,
+                    phone: formData.phone,
+                    districtId: parseInt(formData.districtId),
+                    cropId: parseInt(formData.cropId)
+                };
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+
                 navigate("/dashboard");
             } else {
                 setError(response.message || "Failed to update profile");

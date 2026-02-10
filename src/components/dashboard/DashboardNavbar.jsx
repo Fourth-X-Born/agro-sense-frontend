@@ -1,10 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import NotificationDropdown from "./NotificationDropdown";
 
 const DashboardNavbar = () => {
     const location = useLocation();
     const currentPath = location.pathname;
+    const [user, setUser] = useState({});
+
+    useEffect(() => {
+        const userData = JSON.parse(localStorage.getItem("user") || "{}");
+        setUser(userData);
+
+        // Listen for storage changes (when profile photo is updated)
+        const handleStorageChange = () => {
+            const updatedUser = JSON.parse(localStorage.getItem("user") || "{}");
+            setUser({...updatedUser}); // Force new object reference to trigger re-render
+        };
+        window.addEventListener("storage", handleStorageChange);
+        window.addEventListener("userUpdated", handleStorageChange);
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+            window.removeEventListener("userUpdated", handleStorageChange);
+        };
+    }, []);
 
     const navItems = [
         { path: "/dashboard", label: "Dashboard" },
@@ -45,12 +63,16 @@ const DashboardNavbar = () => {
                     <NotificationDropdown />
 
                     {/* Profile Avatar */}
-                    <Link to="/settings" className="w-8 h-8 rounded-full bg-gray-300 overflow-hidden hover:ring-2 hover:ring-primary/30 transition-all">
-                        <img
-                            src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                        />
+                    <Link to="/settings" className="w-8 h-8 rounded-full bg-gray-300 overflow-hidden hover:ring-2 hover:ring-primary/30 transition-all flex items-center justify-center">
+                        {user.profilePhoto && user.profilePhoto.length > 0 ? (
+                            <img
+                                src={user.profilePhoto}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <span className="material-symbols-outlined text-gray-500 text-lg">person</span>
+                        )}
                     </Link>
                 </div>
             </div>

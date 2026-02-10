@@ -1,7 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "../components/Layout";
+import ProtectedRoute from "../components/ProtectedRoute";
 import LandingPage from "../pages/LandingPage";
 import AuthPage from "../pages/AuthPage";
+import ProfileCompletionPage from "../pages/ProfileCompletionPage";
 import DashboardPage from "../pages/DashboardPage";
 import CropRiskPage from "../pages/CropRiskPage";
 import WeatherPage from "../pages/WeatherPage";
@@ -31,12 +33,13 @@ export default function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<AuthPage />} />
         <Route path="/register" element={<AuthPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/crop-risk" element={<CropRiskPage />} />
-        <Route path="/weather" element={<WeatherPage />} />
-        <Route path="/market-prices" element={<MarketPricesPage />} />
-        <Route path="/crop-guide" element={<CropGuidePage />} />
-        <Route path="/settings" element={<ProfileSettingsPage />} />
+        <Route path="/complete-profile" element={<ProtectedRoute><ProfileCompletionPage /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/crop-risk" element={<ProtectedRoute><CropRiskPage /></ProtectedRoute>} />
+        <Route path="/weather" element={<ProtectedRoute><WeatherPage /></ProtectedRoute>} />
+        <Route path="/market-prices" element={<ProtectedRoute><MarketPricesPage /></ProtectedRoute>} />
+        <Route path="/crop-guide" element={<ProtectedRoute><CropGuidePage /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><ProfileSettingsPage /></ProtectedRoute>} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/contact-us" element={<LandingContactPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />

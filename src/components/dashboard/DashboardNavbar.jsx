@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import NotificationDropdown from "./NotificationDropdown";
 
 const DashboardNavbar = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const currentPath = location.pathname;
     const [user, setUser] = useState({});
 
@@ -23,6 +24,12 @@ const DashboardNavbar = () => {
             window.removeEventListener("userUpdated", handleStorageChange);
         };
     }, []);
+
+    const handleSignOut = () => {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        navigate("/");
+    };
 
     const navItems = [
         { path: "/dashboard", label: "Dashboard" },
@@ -63,7 +70,7 @@ const DashboardNavbar = () => {
                     <NotificationDropdown />
 
                     {/* Profile Avatar */}
-                    <Link to="/settings" className="w-8 h-8 rounded-full bg-gray-300 overflow-hidden hover:ring-2 hover:ring-primary/30 transition-all flex items-center justify-center">
+                    <Link to="/settings" className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden hover:ring-2 hover:ring-primary/30 transition-all flex items-center justify-center flex-shrink-0">
                         {user.profilePhoto && user.profilePhoto.length > 0 ? (
                             <img
                                 src={user.profilePhoto}
@@ -74,6 +81,16 @@ const DashboardNavbar = () => {
                             <span className="material-symbols-outlined text-gray-500 text-lg">person</span>
                         )}
                     </Link>
+
+                    {/* Sign Out Button */}
+                    <button
+                        onClick={handleSignOut}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Sign Out"
+                    >
+                        <span className="material-symbols-outlined text-sm">logout</span>
+                        <span className="hidden sm:inline">Sign Out</span>
+                    </button>
                 </div>
             </div>
         </header>

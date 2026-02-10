@@ -153,8 +153,8 @@ export default function AdminDashboardPage() {
                                                         </div>
                                                     </td>
                                                     <td className="py-4 px-5 text-sm text-gray-500">{price.districtName || price.district?.name}</td>
-                                                    <td className="py-4 px-5 text-sm font-semibold text-primary">{parseFloat(price.price).toFixed(2)}</td>
-                                                    <td className="py-4 px-5 text-sm text-gray-400">{formatDate(price.date)}</td>
+                                                    <td className="py-4 px-5 text-sm font-semibold text-primary">{parseFloat(price.pricePerKg || price.price || 0).toFixed(2)}</td>
+                                                    <td className="py-4 px-5 text-sm text-gray-400">{formatDate(price.priceDate || price.date)}</td>
                                                 </tr>
                                             ))
                                         )}

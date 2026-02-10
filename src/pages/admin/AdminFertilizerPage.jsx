@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AdminLayout from "../../components/admin/AdminLayout";
 import adminService from "../../services/adminService";
 
 export default function AdminFertilizerPage() {
+    const formRef = useRef(null);
     const [formData, setFormData] = useState({
         cropId: "",
-        name: "",
-        type: "",
+        fertilizerName: "",
+        fertilizerType: "",
         applicationStage: "",
-        dosage: "",
+        dosagePerHectare: "",
+        applicationMethod: "",
         notes: "",
     });
 
@@ -18,8 +20,6 @@ export default function AdminFertilizerPage() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [editingId, setEditingId] = useState(null);
-
-    const fertilizerTypes = ["Chemical", "Organic", "Bio-fertilizer"];
 
     useEffect(() => {
         fetchData();
@@ -51,10 +51,11 @@ export default function AdminFertilizerPage() {
     const resetForm = () => {
         setFormData({
             cropId: "",
-            name: "",
-            type: "",
+            fertilizerName: "",
+            fertilizerType: "",
             applicationStage: "",
-            dosage: "",
+            dosagePerHectare: "",
+            applicationMethod: "",
             notes: "",
         });
         setEditingId(null);
@@ -62,7 +63,7 @@ export default function AdminFertilizerPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.cropId || !formData.name || !formData.type) {
+        if (!formData.cropId || !formData.fertilizerName || !formData.fertilizerType) {
             alert("Please fill in required fields (Crop, Name, Type)");
             return;
         }
@@ -71,10 +72,11 @@ export default function AdminFertilizerPage() {
             setSubmitting(true);
             const payload = {
                 cropId: parseInt(formData.cropId),
-                name: formData.name,
-                type: formData.type,
-                applicationStage: formData.applicationStage,
-                dosage: formData.dosage,
+                fertilizerName: formData.fertilizerName,
+                fertilizerType: formData.fertilizerType,
+                applicationStage: formData.applicationStage || "General",
+                dosagePerHectare: formData.dosagePerHectare || "As recommended",
+                applicationMethod: formData.applicationMethod,
                 notes: formData.notes,
             };
 
@@ -97,13 +99,18 @@ export default function AdminFertilizerPage() {
     const handleEdit = (rec) => {
         setFormData({
             cropId: rec.cropId || rec.crop?.id || "",
-            name: rec.name || "",
-            type: rec.type || "",
+            fertilizerName: rec.fertilizerName || "",
+            fertilizerType: rec.fertilizerType || "",
             applicationStage: rec.applicationStage || "",
-            dosage: rec.dosage || "",
+            dosagePerHectare: rec.dosagePerHectare || "",
+            applicationMethod: rec.applicationMethod || "",
             notes: rec.notes || "",
         });
         setEditingId(rec.id);
+        // Scroll to form section
+        setTimeout(() => {
+            formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
     };
 
     const handleDelete = async (id) => {
@@ -118,12 +125,13 @@ export default function AdminFertilizerPage() {
     };
 
     const getTypeColor = (type) => {
-        switch (type?.toLowerCase()) {
-            case "chemical": return "bg-blue-100 text-blue-700";
-            case "organic": return "bg-green-100 text-green-700";
-            case "bio-fertilizer": return "bg-purple-100 text-purple-700";
-            default: return "bg-gray-100 text-gray-700";
-        }
+        const typeLower = type?.toLowerCase() || '';
+        if (typeLower.includes('nitrogen')) return "bg-blue-100 text-blue-700";
+        if (typeLower.includes('phosphorus')) return "bg-orange-100 text-orange-700";
+        if (typeLower.includes('potassium')) return "bg-purple-100 text-purple-700";
+        if (typeLower.includes('organic') || typeLower.includes('compost')) return "bg-green-100 text-green-700";
+        if (typeLower.includes('compound')) return "bg-teal-100 text-teal-700";
+        return "bg-gray-100 text-gray-700";
     };
 
     return (
@@ -170,11 +178,11 @@ export default function AdminFertilizerPage() {
                                         recommendations.map((rec, index) => (
                                             <tr key={rec.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                                                 <td className="py-4 px-5 text-sm font-medium text-[#131613]">{rec.cropName || rec.crop?.name}</td>
-                                                <td className="py-4 px-5 text-sm text-gray-600">{rec.name}</td>
+                                                <td className="py-4 px-5 text-sm text-gray-600">{rec.fertilizerName}</td>
                                                 <td className="py-4 px-5">
-                                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(rec.type)}`}>{rec.type}</span>
+                                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getTypeColor(rec.fertilizerType)}`}>{rec.fertilizerType}</span>
                                                 </td>
-                                                <td className="py-4 px-5 text-sm text-gray-600">{rec.dosage}</td>
+                                                <td className="py-4 px-5 text-sm text-gray-600">{rec.dosagePerHectare}</td>
                                                 <td className="py-4 px-5 text-sm text-gray-500">{rec.applicationStage}</td>
                                                 <td className="py-4 px-5">
                                                     <div className="flex items-center justify-end gap-2">
@@ -196,7 +204,7 @@ export default function AdminFertilizerPage() {
                 </div>
 
                 {/* Add/Edit Form */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 animate-fade-in-up delay-200">
+                <div ref={formRef} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 animate-fade-in-up delay-200">
                     <div className="mb-5">
                         <h3 className="text-base font-bold text-[#131613]">{editingId ? "Edit" : "Add/Edit"} Recommendation</h3>
                         <p className="text-gray-400 text-xs mt-1">Enter details for a new fertilizer recommendation or modify existing data.</p>
@@ -214,28 +222,30 @@ export default function AdminFertilizerPage() {
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-2">Fertilizer Name *</label>
-                                <input type="text" name="name" placeholder="e.g. Urea" value={formData.name} onChange={handleInputChange}
+                                <input type="text" name="fertilizerName" placeholder="e.g. Urea" value={formData.fertilizerName} onChange={handleInputChange}
                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
                             </div>
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-2">Fertilizer Type *</label>
-                                <select name="type" value={formData.type} onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer">
-                                    <option value="">Select Type...</option>
-                                    {fertilizerTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-                                </select>
+                                <input type="text" name="fertilizerType" placeholder="e.g. Nitrogen, Organic" value={formData.fertilizerType} onChange={handleInputChange}
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
                                 <label className="block text-xs font-medium text-gray-600 mb-2">Application Stage</label>
                                 <input type="text" name="applicationStage" placeholder="e.g. Vegetative Phase" value={formData.applicationStage} onChange={handleInputChange}
                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-gray-600 mb-2">Recommended Dosage</label>
-                                <input type="text" name="dosage" placeholder="e.g. 50 kg/ha" value={formData.dosage} onChange={handleInputChange}
+                                <label className="block text-xs font-medium text-gray-600 mb-2">Dosage Per Hectare</label>
+                                <input type="text" name="dosagePerHectare" placeholder="e.g. 50-100 kg/ha" value={formData.dosagePerHectare} onChange={handleInputChange}
+                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-2">Application Method</label>
+                                <input type="text" name="applicationMethod" placeholder="e.g. Broadcasting, Foliar spray" value={formData.applicationMethod} onChange={handleInputChange}
                                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" />
                             </div>
                         </div>
@@ -247,6 +257,12 @@ export default function AdminFertilizerPage() {
                         </div>
 
                         <div className="flex items-center justify-end gap-3">
+                            {editingId && (
+                                <button type="button" onClick={resetForm} className="flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                    <span className="material-symbols-outlined text-lg">add</span>
+                                    Add New
+                                </button>
+                            )}
                             <button type="button" onClick={resetForm} className="px-5 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">Cancel</button>
                             <button type="submit" disabled={submitting}
                                 className="px-5 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md btn-hover disabled:opacity-50">

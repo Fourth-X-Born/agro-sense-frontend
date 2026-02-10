@@ -14,6 +14,7 @@ const AdminSidebar = () => {
         { path: "/admin/market-prices", label: "Market Prices", icon: "trending_up" },
         { path: "/admin/fertilizer", label: "Fertilizer", icon: "science" },
         { path: "/admin/farmers", label: "Farmers", icon: "groups" },
+        { path: "/admin/user-requests", label: "User Requests", icon: "contact_mail" },
     ];
 
     const handleSignOut = () => {

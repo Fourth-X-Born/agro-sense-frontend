@@ -17,14 +17,14 @@ export default function MarketPricesPage() {
 
     // Fallback images for crops
     const cropImages = {
-        "Rice": "https://images.unsplash.com/photo-1586201375761-83865001e31c?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+        "Rice": "https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+        "Maize": "https://images.unsplash.com/photo-1551754655-cd27e38d2076?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+        "Corn": "https://images.unsplash.com/photo-1551754655-cd27e38d2076?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+        "Tomato": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
+        "Chili": "https://images.unsplash.com/photo-1588891825655-aa4f0164d1b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
         "Onion": "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
         "Carrot": "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        "Potato": "https://growhoss.com/cdn/shop/articles/potato_ecdbb7b2-3914-4edb-818d-eb6abfc66627_460x@2x.jpg?v=1761159166",
-        "Beans": "https://images.unsplash.com/photo-1567375698348-5d9d5ae99de0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        "Cabbage": "https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        "Tomato": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        "Chili": "https://casadeamor.in/cdn/shop/articles/vipul-borade-FvvgvCO-0gI-unsplash.jpg?v=1649308066&width=1100",
+        "Potato": "https://images.unsplash.com/photo-1518977676601-b53f82ber79e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
         "default": "https://images.unsplash.com/photo-1488459716781-31db52582fe9?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
     };
 
@@ -79,8 +79,10 @@ export default function MarketPricesPage() {
     const getCategoryColor = (cropName) => {
         const name = cropName?.toLowerCase() || "";
         if (name.includes("rice") || name.includes("paddy") || name.includes("wheat")) return "bg-amber-100 text-amber-700";
-        if (name.includes("potato") || name.includes("yam")) return "bg-orange-100 text-orange-700";
+        if (name.includes("maize") || name.includes("corn")) return "bg-yellow-100 text-yellow-700";
         if (name.includes("chili") || name.includes("pepper")) return "bg-red-100 text-red-700";
+        if (name.includes("onion")) return "bg-purple-100 text-purple-700";
+        if (name.includes("tomato")) return "bg-rose-100 text-rose-700";
         return "bg-green-100 text-green-700";
     };
 
@@ -99,6 +101,56 @@ export default function MarketPricesPage() {
             default: return 0;
         }
     });
+
+    // Loading screen while fetching market data
+    const cropsLoaded = crops.length > 0;
+    const districtsLoaded = districts.length > 0;
+    const pricesLoaded = marketPrices.length > 0;
+    
+    if (loading || (!cropsLoaded && !districtsLoaded)) {
+        return (
+            <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
+                <DashboardNavbar />
+                <main className="flex-1 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-4 animate-fade-in-up">
+                        <div className="relative">
+                            <div className="w-16 h-16 border-4 border-green-200 rounded-full"></div>
+                            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-green-500 rounded-full animate-spin"></div>
+                            <span className="material-symbols-outlined text-green-600 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                                currency_exchange
+                            </span>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-[#131613]">
+                                {cropsLoaded && districtsLoaded ? 'Loading Market Prices...' : 'Preparing Market Data...'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Fetching latest crop prices from economic centers</p>
+                        </div>
+                        <div className="flex items-center gap-3 mt-2">
+                            <div className={`flex items-center gap-1.5 text-[10px] ${cropsLoaded ? 'text-green-500' : 'text-gray-400'}`}>
+                                <span className={`material-symbols-outlined text-xs ${cropsLoaded ? '' : 'animate-pulse'}`}>
+                                    {cropsLoaded ? 'check_circle' : 'grass'}
+                                </span>
+                                Crops
+                            </div>
+                            <div className={`flex items-center gap-1.5 text-[10px] ${districtsLoaded ? 'text-green-500' : 'text-gray-400'}`}>
+                                <span className={`material-symbols-outlined text-xs ${districtsLoaded ? '' : 'animate-pulse'}`}>
+                                    {districtsLoaded ? 'check_circle' : 'location_on'}
+                                </span>
+                                Districts
+                            </div>
+                            <div className={`flex items-center gap-1.5 text-[10px] ${pricesLoaded ? 'text-green-500' : 'text-gray-400'}`}>
+                                <span className={`material-symbols-outlined text-xs ${pricesLoaded ? '' : 'animate-pulse'}`}>
+                                    {pricesLoaded ? 'check_circle' : 'trending_up'}
+                                </span>
+                                Prices
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">

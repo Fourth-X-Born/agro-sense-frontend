@@ -103,7 +103,7 @@ export default function AdminMarketPricesPage() {
                 {/* Recent Price Entries Table */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-6 animate-fade-in-up delay-100">
                     <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                        <h3 className="text-base font-bold text-[#131613]">Recent Price Entries</h3>
+                        <h3 className="text-base font-bold text-[#131613]">All Price Entries ({priceEntries.length})</h3>
                         <button onClick={fetchData} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                             <span className="material-symbols-outlined text-gray-500">refresh</span>
                         </button>
@@ -142,17 +142,17 @@ export default function AdminMarketPricesPage() {
                                             <td colSpan="6" className="py-8 text-center text-gray-400">No price entries found</td>
                                         </tr>
                                     ) : (
-                                        priceEntries.slice(0, 10).map((entry, index) => (
+                                        priceEntries.map((entry, index) => (
                                             <tr
                                                 key={entry.id}
                                                 className="border-b border-gray-50 hover:bg-gray-50 transition-colors animate-fade-in"
-                                                style={{ animationDelay: `${index * 50}ms` }}
+                                                style={{ animationDelay: `${Math.min(index, 10) * 50}ms` }}
                                             >
                                                 <td className="py-4 px-5 text-sm text-gray-400">{entry.id}</td>
                                                 <td className="py-4 px-5 text-sm font-medium text-[#131613]">{entry.cropName || entry.crop?.name}</td>
                                                 <td className="py-4 px-5 text-sm text-primary">{entry.districtName || entry.district?.name}</td>
-                                                <td className="py-4 px-5 text-sm font-semibold text-primary">{parseFloat(entry.price).toFixed(2)}</td>
-                                                <td className="py-4 px-5 text-sm text-gray-400">{formatDate(entry.date)}</td>
+                                                <td className="py-4 px-5 text-sm font-semibold text-primary">{parseFloat(entry.pricePerKg || entry.price || 0).toFixed(2)}</td>
+                                                <td className="py-4 px-5 text-sm text-gray-400">{formatDate(entry.priceDate || entry.date)}</td>
                                                 <td className="py-4 px-5">
                                                     <div className="flex items-center justify-end">
                                                         <button

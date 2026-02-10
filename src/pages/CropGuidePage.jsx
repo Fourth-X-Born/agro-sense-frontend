@@ -24,8 +24,20 @@ export default function CropGuidePage() {
                 const response = await dataService.getCrops();
                 const cropsData = response?.data || response || [];
                 setCrops(Array.isArray(cropsData) ? cropsData : []);
-                // Auto-select first crop if available
-                if (cropsData.length > 0) {
+                
+                // Get user's preferred crop from localStorage
+                let userCropId = null;
+                try {
+                    const user = JSON.parse(localStorage.getItem("user") || "{}");
+                    userCropId = user.cropId || null;
+                } catch {
+                    userCropId = null;
+                }
+
+                // Auto-select user's crop if available, else first crop
+                if (userCropId && cropsData.some(c => c.id === userCropId)) {
+                    setSelectedCropId(userCropId);
+                } else if (cropsData.length > 0) {
                     setSelectedCropId(cropsData[0].id);
                 }
             } catch (err) {
@@ -343,16 +355,49 @@ export default function CropGuidePage() {
         }
     };
 
+    const cropsLoaded = crops.length > 0;
+    const guideLoaded = !!cropGuide;
+    
     const renderLoadingState = () => (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
             <DashboardNavbar />
             <main className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                    <p className="text-gray-500 mt-4">Loading crops...</p>
+                <div className="flex flex-col items-center gap-4 animate-fade-in-up">
+                    <div className="relative">
+                        <div className="w-16 h-16 border-4 border-amber-200 rounded-full"></div>
+                        <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-amber-500 rounded-full animate-spin"></div>
+                        <span className="material-symbols-outlined text-amber-600 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                            menu_book
+                        </span>
+                    </div>
+                    <div className="text-center">
+                        <p className="text-sm font-medium text-[#131613]">
+                            {cropsLoaded ? 'Loading Crop Guidelines...' : 'Loading Crop Guide...'}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Fetching cultivation guidelines & best practices</p>
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                        <div className={`flex items-center gap-1.5 text-[10px] ${cropsLoaded ? 'text-green-500' : 'text-gray-400'}`}>
+                            <span className={`material-symbols-outlined text-xs ${cropsLoaded ? '' : 'animate-pulse'}`}>
+                                {cropsLoaded ? 'check_circle' : 'grass'}
+                            </span>
+                            Crops
+                        </div>
+                        <div className={`flex items-center gap-1.5 text-[10px] ${guideLoaded ? 'text-green-500' : 'text-gray-400'}`}>
+                            <span className={`material-symbols-outlined text-xs ${guideLoaded ? '' : 'animate-pulse'}`}>
+                                {guideLoaded ? 'check_circle' : 'schedule'}
+                            </span>
+                            Timelines
+                        </div>
+                        <div className={`flex items-center gap-1.5 text-[10px] ${guideLoaded ? 'text-green-500' : 'text-gray-400'}`}>
+                            <span className={`material-symbols-outlined text-xs ${guideLoaded ? '' : 'animate-pulse'}`}>
+                                {guideLoaded ? 'check_circle' : 'eco'}
+                            </span>
+                            Practices
+                        </div>
+                    </div>
                 </div>
             </main>
-            <DashboardFooter />
         </div>
     );
 
@@ -371,11 +416,10 @@ export default function CropGuidePage() {
                     </button>
                 </div>
             </main>
-            <DashboardFooter />
         </div>
     );
 
-    if (loading) return renderLoadingState();
+    if (loading || guideLoading) return renderLoadingState();
     if (error && !cropGuide) return renderErrorState();
 
     return (

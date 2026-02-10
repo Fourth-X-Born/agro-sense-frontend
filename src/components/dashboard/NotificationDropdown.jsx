@@ -33,20 +33,49 @@ const NotificationDropdown = () => {
                     link: "/weather",
                 }));
 
-                // Add some system notifications
-                const systemNotifications = [
-                    {
-                        id: "system-1",
-                        type: "tip",
-                        title: "Farming Tip",
-                        message: `Best time to irrigate during ${getCurrentSeason()} season is early morning`,
+                // Add user-specific notifications
+                const systemNotifications = [];
+
+                // Check if user is missing profile photo
+                if (!user.profilePhoto || user.profilePhoto.length === 0) {
+                    systemNotifications.push({
+                        id: "profile-photo",
+                        type: "action",
+                        title: "Complete Your Profile",
+                        message: "Add a profile photo to personalize your account",
                         severity: "LOW",
-                        icon: "lightbulb",
-                        time: "Today",
-                        read: true,
-                        link: "/crop-guide",
-                    },
-                ];
+                        icon: "add_a_photo",
+                        time: "Action needed",
+                        read: false,
+                        link: "/settings",
+                    });
+                }
+
+                // Welcome notification for users
+                systemNotifications.push({
+                    id: "welcome",
+                    type: "welcome",
+                    title: `Welcome, ${user.name?.split(' ')[0] || 'Farmer'}!`,
+                    message: "Explore crop risk analysis, weather forecasts, and market prices for your district",
+                    severity: "LOW",
+                    icon: "waving_hand",
+                    time: "Just now",
+                    read: localStorage.getItem('welcomeRead') === 'true',
+                    link: "/dashboard",
+                });
+
+                // Add farming tip
+                systemNotifications.push({
+                    id: "system-1",
+                    type: "tip",
+                    title: "Farming Tip",
+                    message: `Best time to irrigate during ${getCurrentSeason()} season is early morning`,
+                    severity: "LOW",
+                    icon: "lightbulb",
+                    time: "Today",
+                    read: true,
+                    link: "/crop-guide",
+                });
 
                 const allNotifications = [...weatherNotifications, ...systemNotifications];
                 setNotifications(allNotifications);
@@ -127,6 +156,7 @@ const NotificationDropdown = () => {
     const markAllAsRead = () => {
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
         setUnreadCount(0);
+        localStorage.setItem('welcomeRead', 'true');
     };
 
     // Toggle dropdown
@@ -142,12 +172,12 @@ const NotificationDropdown = () => {
             {/* Notification Bell Button */}
             <button
                 onClick={toggleDropdown}
-                className="relative p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                className="relative w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
                 aria-label="Notifications"
             >
-                <span className="material-symbols-outlined text-gray-600 text-xl">notifications</span>
+                <span className="material-symbols-outlined text-gray-600 text-base">notifications</span>
                 {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full px-1">
+                    <span className="absolute top-0 right-0 min-w-[14px] h-[14px] flex items-center justify-center bg-red-500 text-white text-[8px] font-bold rounded-full px-0.5">
                         {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                 )}

@@ -24,6 +24,7 @@ import AdminCropGuidePage from "../pages/admin/AdminCropGuidePage";
 import AdminFarmersPage from "../pages/admin/AdminFarmersPage";
 import AdminFertilizerPage from "../pages/admin/AdminFertilizerPage";
 import AdminMarketPricesPage from "../pages/admin/AdminMarketPricesPage";
+import AdminUserRequestsPage from "../pages/admin/AdminUserRequestsPage";
 import AdminAuthPage from "../pages/admin/AdminAuthPage";
 
 export default function AppRoutes() {
@@ -59,6 +60,7 @@ export default function AppRoutes() {
       <Route path="/admin/market-prices" element={<AdminMarketPricesPage />} />
       <Route path="/admin/fertilizer" element={<AdminFertilizerPage />} />
       <Route path="/admin/farmers" element={<AdminFarmersPage />} />
+      <Route path="/admin/user-requests" element={<AdminUserRequestsPage />} />
     </Routes>
   );
 }

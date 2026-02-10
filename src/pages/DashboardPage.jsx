@@ -429,6 +429,49 @@ export default function DashboardPage() {
 
   const cropAdvice = generateCropAdvice();
 
+  // Show loading screen while fetching initial data
+  if (loading && pricesLoading) {
+    return (
+      <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
+        <DashboardNavbar />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 animate-fade-in-up">
+            {/* Animated Loader */}
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-primary/20 rounded-full"></div>
+              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-primary rounded-full animate-spin"></div>
+              <span className="material-symbols-outlined text-primary text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                cloud_sync
+              </span>
+            </div>
+            {/* Loading Text */}
+            <div className="text-center">
+              <p className="text-sm font-medium text-[#131613]">Fetching your farm data...</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Loading weather, market prices & alerts for {user.district || 'your district'}
+              </p>
+            </div>
+            {/* Progress Indicators */}
+            <div className="flex items-center gap-3 mt-2">
+              <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                <span className="material-symbols-outlined text-xs animate-pulse">thermostat</span>
+                Weather
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                <span className="material-symbols-outlined text-xs animate-pulse">trending_up</span>
+                Prices
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                <span className="material-symbols-outlined text-xs animate-pulse">notifications</span>
+                Alerts
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
       {/* Dashboard Navbar */}
@@ -630,11 +673,11 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 <Link to="/crop-risk" className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all group card-interactive">
                   <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-gray-600 text-lg">photo_camera</span>
+                    <span className="material-symbols-outlined text-gray-600 text-lg">analytics</span>
                   </div>
                   <div className="flex-1 text-left">
                     <p className="text-xs font-medium text-[#131613]">Analyze Crop Risk</p>
-                    <p className="text-[10px] text-gray-400">Upload a photo for diagnosis</p>
+                    <p className="text-[10px] text-gray-400">AI weather-based risk assessment</p>
                   </div>
                   <span className="material-symbols-outlined text-gray-400 text-sm group-hover:text-gray-600 group-hover:translate-x-1 transition-transform">chevron_right</span>
                 </Link>

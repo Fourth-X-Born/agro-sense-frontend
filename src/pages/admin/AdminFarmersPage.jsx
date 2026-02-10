@@ -95,15 +95,10 @@ export default function AdminFarmersPage() {
                             />
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">
-                                Total: {filteredFarmers.length} farmers
-                            </span>
-                            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                                <span className="material-symbols-outlined text-gray-500">download</span>
-                            </button>
-                        </div>
+                        {/* Total Count */}
+                        <span className="text-xs text-gray-500">
+                            Total: {filteredFarmers.length} farmers
+                        </span>
                     </div>
 
                     {/* Loading State */}

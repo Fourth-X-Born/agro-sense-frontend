@@ -15,7 +15,7 @@ export default function CropRiskPage() {
     const [crops, setCrops] = useState([]);
 
     // Analysis state
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [analyzing, setAnalyzing] = useState(false);
     const [analysisResult, setAnalysisResult] = useState(null);
     const [error, setError] = useState(null);
@@ -24,9 +24,23 @@ export default function CropRiskPage() {
     // Growth stages (static for now)
     const growthStages = ["Germination", "Seedling", "Vegetative Phase", "Flowering", "Grain Filling", "Maturity"];
 
-    // Load crops and districts on mount
+    // Get user preferences from localStorage
+    const getUserPreferences = () => {
+        try {
+            const user = JSON.parse(localStorage.getItem("user") || "{}");
+            return {
+                districtId: user.districtId || null,
+                cropId: user.cropId || null,
+                farmerId: user.id || null
+            };
+        } catch {
+            return { districtId: null, cropId: null, farmerId: null };
+        }
+    };
+
+    // Load crops and districts on mount, then auto-analyze
     useEffect(() => {
-        const loadData = async () => {
+        const loadDataAndAnalyze = async () => {
             setLoading(true);
             try {
                 const [cropsRes, districtsRes] = await Promise.all([
@@ -34,18 +48,46 @@ export default function CropRiskPage() {
                     dataService.getDistricts()
                 ]);
 
+                const userPrefs = getUserPreferences();
+                let autoDistrictId = null;
+                let autoCropId = null;
+
                 if (cropsRes.success && cropsRes.data) {
                     setCrops(cropsRes.data);
-                    if (cropsRes.data.length > 0) {
-                        setSelectedCropId(cropsRes.data[0].id);
+                    // Use user's crop preference if available, else first crop
+                    if (userPrefs.cropId && cropsRes.data.some(c => c.id === userPrefs.cropId)) {
+                        autoCropId = userPrefs.cropId;
+                    } else if (cropsRes.data.length > 0) {
+                        autoCropId = cropsRes.data[0].id;
                     }
+                    setSelectedCropId(autoCropId);
                 }
 
                 if (districtsRes.success && districtsRes.data) {
                     setDistricts(districtsRes.data);
-                    // Find Polonnaruwa as default or use first
-                    const polonnaruwa = districtsRes.data.find(d => d.name === "Polonnaruwa");
-                    setSelectedDistrictId(polonnaruwa?.id || districtsRes.data[0]?.id);
+                    // Use user's district preference if available
+                    if (userPrefs.districtId && districtsRes.data.some(d => d.id === userPrefs.districtId)) {
+                        autoDistrictId = userPrefs.districtId;
+                    } else {
+                        // Fallback to Polonnaruwa or first district
+                        const polonnaruwa = districtsRes.data.find(d => d.name === "Polonnaruwa");
+                        autoDistrictId = polonnaruwa?.id || districtsRes.data[0]?.id;
+                    }
+                    setSelectedDistrictId(autoDistrictId);
+                }
+
+                // Auto-analyze if user is logged in with valid selections
+                if (userPrefs.farmerId && autoCropId && autoDistrictId) {
+                    // Keep loading=true, run analysis
+                    try {
+                        const response = await dataService.analyzeRisk(autoCropId, autoDistrictId, userPrefs.farmerId);
+                        if (response.success && response.data) {
+                            setAnalysisResult(response.data);
+                            setLastUpdated(new Date());
+                        }
+                    } catch (err) {
+                        console.error("Auto-analysis error:", err);
+                    }
                 }
             } catch (err) {
                 console.error("Error loading data:", err);
@@ -54,7 +96,7 @@ export default function CropRiskPage() {
                 setLoading(false);
             }
         };
-        loadData();
+        loadDataAndAnalyze();
     }, []);
 
     // Handle risk analysis
@@ -115,6 +157,59 @@ export default function CropRiskPage() {
             hour: "2-digit", minute: "2-digit"
         });
     };
+
+    // Loading screen while fetching data and running initial analysis
+    const userPrefs = getUserPreferences();
+    const isLoggedIn = !!userPrefs.farmerId;
+    
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#f6f8f6] flex flex-col">
+                <DashboardNavbar />
+                <main className="flex-1 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-4 animate-fade-in-up">
+                        <div className="relative">
+                            <div className="w-16 h-16 border-4 border-primary/20 rounded-full"></div>
+                            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-transparent border-t-primary rounded-full animate-spin"></div>
+                            <span className="material-symbols-outlined text-primary text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                                analytics
+                            </span>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-[#131613]">
+                                {crops.length > 0 ? "Analyzing Crop Risk..." : "Preparing Risk Analysis..."}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                {crops.length > 0 
+                                    ? "Running AI analysis for your district" 
+                                    : "Loading crops, districts & weather data"}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3 mt-2">
+                            <div className={`flex items-center gap-1.5 text-[10px] ${crops.length > 0 ? 'text-green-500' : 'text-gray-400'}`}>
+                                <span className={`material-symbols-outlined text-xs ${crops.length > 0 ? '' : 'animate-pulse'}`}>
+                                    {crops.length > 0 ? 'check_circle' : 'grass'}
+                                </span>
+                                Crops
+                            </div>
+                            <div className={`flex items-center gap-1.5 text-[10px] ${districts.length > 0 ? 'text-green-500' : 'text-gray-400'}`}>
+                                <span className={`material-symbols-outlined text-xs ${districts.length > 0 ? '' : 'animate-pulse'}`}>
+                                    {districts.length > 0 ? 'check_circle' : 'location_on'}
+                                </span>
+                                Districts
+                            </div>
+                            <div className={`flex items-center gap-1.5 text-[10px] ${crops.length > 0 && districts.length > 0 ? 'text-gray-400' : 'text-gray-300'}`}>
+                                <span className="material-symbols-outlined text-xs animate-pulse">
+                                    cloud
+                                </span>
+                                Analysis
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#f6f8f6] flex flex-col">

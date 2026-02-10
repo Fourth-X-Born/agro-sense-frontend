@@ -118,6 +118,32 @@ const adminService = {
         const response = await api.get('/admin/farmers');
         return response;
     },
+
+    // ==================== CONTACT MESSAGES ====================
+    getContactMessages: async () => {
+        const response = await api.get('/admin/contact-messages');
+        return response;
+    },
+
+    getContactMessageStats: async () => {
+        const response = await api.get('/admin/contact-messages/stats');
+        return response;
+    },
+
+    getContactMessage: async (id) => {
+        const response = await api.get(`/admin/contact-messages/${id}`);
+        return response;
+    },
+
+    updateContactMessage: async (id, data) => {
+        const response = await api.put(`/admin/contact-messages/${id}`, data);
+        return response;
+    },
+
+    deleteContactMessage: async (id) => {
+        const response = await api.delete(`/admin/contact-messages/${id}`);
+        return response;
+    },
 };
 
 export default adminService;

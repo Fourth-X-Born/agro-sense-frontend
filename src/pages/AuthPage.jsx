@@ -142,7 +142,7 @@ export default function AuthPage() {
             </div>
 
             {/* Main Card - Centered */}
-            <div className="flex w-full max-w-[800px] bg-white rounded-xl shadow-xl overflow-visible animate-scale-in">
+            <div className="flex w-full max-w-[900px] bg-white rounded-2xl shadow-xl overflow-visible animate-scale-in transform scale-105">
                 {/* Left Panel - Image */}
                 <div className="hidden md:flex w-[40%] relative rounded-l-xl overflow-hidden">
                     <div
@@ -154,8 +154,7 @@ export default function AuthPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
                     <div className="relative z-10 flex flex-col justify-between p-5 h-full">
                         <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary text-xl">spa</span>
-                            <span className="text-white text-sm font-bold">Agro<span className="text-primary">Sense</span> AI</span>
+                            {/* Logo removed from here */}
                         </div>
                         <div className="flex flex-col gap-2">
                             <h2 className="text-white text-xl font-bold leading-tight transition-all duration-500">
@@ -177,7 +176,7 @@ export default function AuthPage() {
                 </div>
 
                 {/* Right Panel - Form */}
-                <div className="flex-1 p-6 rounded-r-xl bg-white">
+                <div className="flex-1 p-8 rounded-r-xl bg-white">
                     {/* Header */}
                     <div className="text-center mb-6">
                         {/* Mobile/Form Logo */}
@@ -225,7 +224,7 @@ export default function AuthPage() {
                     </div>
 
                     {/* Form Container with Animation - Fixed height for consistency */}
-                    <div className="relative overflow-hidden h-[260px]">
+                    <div className="relative overflow-hidden h-[300px]">
                         {/* Login Form */}
                         <div className={`h-full transition-all duration-500 ease-in-out ${isLogin
                             ? "opacity-100 translate-x-0"
@@ -233,6 +232,10 @@ export default function AuthPage() {
                             }`}>
                             {isLogin && (
                                 <form onSubmit={handleLogin} className="flex flex-col justify-center h-full gap-3">
+                                    {/* Instruction Text */}
+                                    <p className="text-gray-500 text-xs mb-2 text-center">
+                                        Enter your credentials to access your account
+                                    </p>
                                     {/* Email */}
                                     <div className="flex flex-col gap-1">
                                         <label className="text-[11px] font-medium text-[#131613]">Email</label>
@@ -308,6 +311,10 @@ export default function AuthPage() {
                             }`}>
                             {!isLogin && (
                                 <form onSubmit={handleRegister} className="flex flex-col gap-2.5">
+                                    {/* Instruction Text */}
+                                    <p className="text-gray-500 text-xs mb-2 text-center">
+                                        Fill in your details to create your account
+                                    </p>
                                     {/* Full Name */}
                                     <div className="flex flex-col gap-1">
                                         <label className="text-[11px] font-medium text-[#131613]">Full Name</label>
@@ -385,6 +392,15 @@ export default function AuthPage() {
                         </div>
                     </div>
 
+                    {/* Home Button */}
+                    <Link
+                        to="/"
+                        className="w-full h-9 mt-3 rounded-lg border-2 border-gray-300 text-gray-600 text-xs font-medium flex items-center justify-center gap-1.5 hover:bg-gray-50 hover:border-gray-400 transition-all"
+                    >
+                        <span className="material-symbols-outlined text-base">home</span>
+                        Back to Home
+                    </Link>
+
                     {/* Bottom Link */}
                     <p className="text-center text-[11px] text-gray-400 mt-3">
                         {isLogin ? (
@@ -395,9 +411,9 @@ export default function AuthPage() {
                         ) : (
                             <>
                                 By clicking Register, you agree to our{" "}
-                                <a href="#" className="text-primary font-medium hover:underline">Terms</a>
+                                <Link to="/terms-of-service" className="text-primary font-medium hover:underline">Terms</Link>
                                 {" "}and{" "}
-                                <a href="#" className="text-primary font-medium hover:underline">Privacy Policy</a>
+                                <Link to="/privacy-policy" className="text-primary font-medium hover:underline">Privacy Policy</Link>
                             </>
                         )}
                     </p>

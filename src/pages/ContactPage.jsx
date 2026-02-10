@@ -1,7 +1,18 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
+
+// Fix for default marker icons in Leaflet with Vite
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+    iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png"
+});
 
 export default function ContactPage() {
     const [formData, setFormData] = useState({
@@ -32,7 +43,8 @@ export default function ContactPage() {
             email: "info@agrimin.gov.lk",
             address: "80/5, Govijana Mandiraya, Rajamalwatta Rd, Battaramulla",
             icon: "agriculture",
-            hours: "Mon-Fri: 8:30 AM - 4:30 PM"
+            hours: "Mon-Fri: 8:30 AM - 4:30 PM",
+            coordinates: [6.9014, 79.9188]
         },
         {
             department: "Agricultural Extension Service",
@@ -41,7 +53,8 @@ export default function ContactPage() {
             email: "extension@doa.gov.lk",
             address: "Peradeniya Road, Gannoruwa, Peradeniya",
             icon: "support_agent",
-            hours: "Mon-Fri: 8:00 AM - 5:00 PM"
+            hours: "Mon-Fri: 8:00 AM - 5:00 PM",
+            coordinates: [7.2607, 80.5850]
         },
         {
             department: "Agrarian Development Department",
@@ -50,7 +63,8 @@ export default function ContactPage() {
             email: "agrarian@add.gov.lk",
             address: "42, Kirula Road, Colombo 05",
             icon: "water_drop",
-            hours: "Mon-Fri: 9:00 AM - 4:00 PM"
+            hours: "Mon-Fri: 9:00 AM - 4:00 PM",
+            coordinates: [6.8947, 79.8772]
         },
         {
             department: "Plant Protection Service",
@@ -59,7 +73,8 @@ export default function ContactPage() {
             email: "pps@doa.gov.lk",
             address: "Horticultural Crop Research Station, Gannoruwa",
             icon: "pest_control",
-            hours: "Mon-Fri: 8:30 AM - 4:30 PM"
+            hours: "Mon-Fri: 8:30 AM - 4:30 PM",
+            coordinates: [7.2717, 80.5917]
         },
         {
             department: "Seed Certification Service",
@@ -68,7 +83,8 @@ export default function ContactPage() {
             email: "seeds@doa.gov.lk",
             address: "Sarasavi Mawatha, Peradeniya",
             icon: "eco",
-            hours: "Mon-Fri: 8:00 AM - 4:00 PM"
+            hours: "Mon-Fri: 8:00 AM - 4:00 PM",
+            coordinates: [7.2647, 80.5959]
         },
         {
             department: "AgroSense AI Support",
@@ -77,7 +93,8 @@ export default function ContactPage() {
             email: "support@agrosense.ai",
             address: "Tech Innovation Hub, Colombo 03",
             icon: "smart_toy",
-            hours: "24/7 Online Support"
+            hours: "24/7 Online Support",
+            coordinates: [6.9167, 79.8489]
         }
     ];
 
@@ -250,7 +267,7 @@ export default function ContactPage() {
                             <ul className="space-y-2">
                                 <li className="flex items-start gap-2">
                                     <span className="material-symbols-outlined text-primary text-sm mt-0.5">check</span>
-                                    <p className="text-xs text-gray-600">Include photos of crop issues for faster diagnosis</p>
+                                    <p className="text-xs text-gray-600">Describe your crop issues in detail for accurate guidance</p>
                                 </li>
                                 <li className="flex items-start gap-2">
                                     <span className="material-symbols-outlined text-primary text-sm mt-0.5">check</span>
@@ -271,13 +288,42 @@ export default function ContactPage() {
                         <span className="material-symbols-outlined text-primary text-base">map</span>
                         Find Agricultural Offices Near You
                     </h2>
-                    <div className="bg-gray-100 rounded-lg h-48 flex items-center justify-center">
-                        <div className="text-center">
-                            <span className="material-symbols-outlined text-gray-400 text-4xl">location_on</span>
-                            <p className="text-xs text-gray-500 mt-2">Interactive map coming soon</p>
-                            <p className="text-[10px] text-gray-400">Visit your nearest agricultural extension center for in-person support</p>
-                        </div>
+                    <div className="rounded-lg h-64 overflow-hidden">
+                        <MapContainer 
+                            center={[7.0, 80.0]} 
+                            zoom={8} 
+                            style={{ height: "100%", width: "100%" }}
+                            scrollWheelZoom={true}
+                        >
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            />
+                            {contacts.map((contact, index) => (
+                                <Marker key={index} position={contact.coordinates}>
+                                    <Popup>
+                                        <div className="min-w-[200px]">
+                                            <h3 className="font-bold text-sm text-primary mb-1">{contact.department}</h3>
+                                            <p className="text-xs text-gray-600 mb-2">{contact.description}</p>
+                                            <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                                                <span className="material-symbols-outlined text-xs">location_on</span>
+                                                {contact.address}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                                                <span className="material-symbols-outlined text-xs">phone</span>
+                                                {contact.phone}
+                                            </div>
+                                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                                                <span className="material-symbols-outlined text-xs">schedule</span>
+                                                {contact.hours}
+                                            </div>
+                                        </div>
+                                    </Popup>
+                                </Marker>
+                            ))}
+                        </MapContainer>
                     </div>
+                    <p className="text-[10px] text-gray-400 mt-2 text-center">Click on markers to view office details</p>
                 </div>
             </main>
 

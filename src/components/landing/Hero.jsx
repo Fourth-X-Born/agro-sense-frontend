@@ -5,7 +5,7 @@ const Hero = () => {
     return (
         <section className="w-full flex justify-center py-6 px-10">
             <div className="w-full max-w-[1200px]">
-                <div className="relative overflow-hidden rounded-xl bg-gray-900 shadow-xl">
+                <div className="relative overflow-hidden rounded-xl bg-gray-900 shadow-xl animate-fade-in">
                     {/* Background Image */}
                     <div
                         className="absolute inset-0 z-0 bg-cover bg-center"
@@ -16,22 +16,22 @@ const Hero = () => {
                     <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/70 via-black/40 to-black/20"></div>
                     {/* Content */}
                     <div className="relative z-20 flex flex-col items-center justify-center min-h-[400px] px-8 py-10 text-center">
-                        <h1 className="text-white text-3xl md:text-4xl font-bold leading-tight tracking-tight mb-3 max-w-2xl">
+                        <h1 className="text-white text-3xl md:text-4xl font-bold leading-tight tracking-tight mb-3 max-w-2xl animate-fade-in-up">
                             AI-Powered Crop Risk Advisory for Smarter Farming
                         </h1>
-                        <p className="text-gray-200 text-sm md:text-base font-normal leading-relaxed mb-6 max-w-xl">
+                        <p className="text-gray-200 text-sm md:text-base font-normal leading-relaxed mb-6 max-w-xl animate-fade-in-up delay-200">
                             Empowering Sri Lankan farmers with real-time insights on weather, market trends, and crop health to maximize yield and minimize loss.
                         </p>
-                        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto animate-fade-in-up delay-400">
                             <Link
                                 to="/register"
-                                className="h-10 px-6 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-all shadow-md flex items-center justify-center"
+                                className="h-10 px-6 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-all shadow-md flex items-center justify-center btn-hover hover-glow"
                             >
                                 Get Started
                             </Link>
                             <a
                                 href="#features"
-                                className="h-10 px-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/30 text-white text-sm font-medium hover:bg-white/20 transition-all flex items-center justify-center"
+                                className="h-10 px-6 rounded-lg bg-white/10 backdrop-blur-md border border-white/30 text-white text-sm font-medium hover:bg-white/20 transition-all flex items-center justify-center btn-hover"
                             >
                                 Learn More
                             </a>

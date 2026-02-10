@@ -10,7 +10,7 @@ const LandingPage = () => {
   return (
     <div className="relative flex h-auto min-h-screen w-full flex-col font-display bg-background-light text-[#131613]">
       <Navbar />
-      <main className="flex-grow">
+      <main className="flex-grow animate-fade-in-up">
         <Hero />
         <Features />
         <HowItWorks />

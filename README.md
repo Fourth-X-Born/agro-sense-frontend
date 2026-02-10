@@ -1,16 +1,94 @@
-# React + Vite
+# AgroSense AI Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern farming intelligence dashboard built with React + Vite + Tailwind CSS.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Node.js** v18 or higher
+- **npm** v9 or higher
 
-## React Compiler
+## Quick Start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Clone the repository
+```bash
+git clone https://github.com/Fourth-X-Born/agro-sense-AI-frontend.git
+cd agro-sense-AI-frontend
+```
 
-## Expanding the ESLint configuration
+### 2. Switch to dev branch
+```bash
+git checkout dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 3. Install dependencies
+```bash
+npm install
+```
+
+### 4. Run development server
+```bash
+npm run dev
+```
+
+### 5. Open in browser
+Navigate to: **http://localhost:5173** (or the port shown in terminal)
+
+---
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── dashboard/         # Shared dashboard components
+│   │   ├── DashboardNavbar.jsx
+│   │   └── DashboardFooter.jsx
+│   └── landing/           # Landing page components
+│       ├── Navbar.jsx
+│       ├── Hero.jsx
+│       ├── Features.jsx
+│       ├── HowItWorks.jsx
+│       └── CTASection.jsx
+├── pages/
+│   ├── LandingPage.jsx
+│   ├── AuthPage.jsx
+│   ├── DashboardPage.jsx
+│   ├── CropRiskPage.jsx
+│   ├── WeatherPage.jsx
+│   ├── MarketPricesPage.jsx
+│   ├── CropGuidePage.jsx
+│   └── ProfileSettingsPage.jsx
+├── routes/
+│   └── AppRoutes.jsx      # All route definitions
+└── index.css              # Tailwind config + custom styles
+```
+
+## Available Routes
+
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page |
+| `/login` | Login form |
+| `/register` | Registration form |
+| `/dashboard` | Farmer dashboard |
+| `/crop-risk` | AI crop risk assessment |
+| `/weather` | Weather forecasts |
+| `/market-prices` | Market price tracker |
+| `/crop-guide` | Crop cultivation guide |
+| `/settings` | User profile settings |
+
+## Tech Stack
+
+- **React 18** - UI library
+- **Vite** - Build tool
+- **Tailwind CSS v4** - Styling
+- **React Router v6** - Routing
+- **Material Symbols** - Icons
+
+## Build for Production
+
+```bash
+npm run build
+```
+
+Output will be in the `dist/` folder.

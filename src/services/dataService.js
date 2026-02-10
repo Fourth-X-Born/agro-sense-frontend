@@ -128,6 +128,23 @@ const dataService = {
         const response = await api.get(`/weather/alerts?districtId=${districtId}`);
         return response;
     },
+
+    // ==================== RISK ANALYSIS ====================
+    // Analyze crop risk based on crop and district
+    analyzeRisk: async (cropId, districtId, farmerId = null) => {
+        const response = await api.post('/risk/analyze', {
+            cropId,
+            districtId,
+            farmerId
+        });
+        return response;
+    },
+
+    // Get risk analysis history for a farmer
+    getRiskHistory: async (farmerId) => {
+        const response = await api.get(`/risk/history?farmerId=${farmerId}`);
+        return response;
+    },
 };
 
 export default dataService;

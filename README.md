@@ -98,10 +98,19 @@ npm run build
 
 Output will be in the `dist/` folder.
 
-## Team
+Team
 
-* **Vibhath Kalsara**
-* **Isuru Adikaram**
-* **Ashen Randira**
-* **Dileepa Prabhath**
-* **Chanuka Ushan**
+Team Name: Fourth X Born
+Team Number: DEV - 55
+
+Members
+
+Vibhath Kalsara
+
+Isuru Adikaram
+
+Ashen Randira
+
+Dileepa Prabhath
+
+Chanuka Ushan

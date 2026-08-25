@@ -1,44 +1,53 @@
 import axios from 'axios';
 
-// Create axios instance with base configuration
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
-// Request interceptor for adding auth token
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+// Creates an axios instance that attaches the given localStorage token key
+// as a Bearer token, and redirects to loginPath on 401. Farmer and admin
+// sessions are kept fully separate (different tokens, different redirects)
+// so an admin login never accidentally authenticates farmer requests or
+// vice versa.
+function createApiClient(tokenKey, userKey, loginPath) {
+    const client = axios.create({
+        baseURL,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    client.interceptors.request.use(
+        (config) => {
+            const token = localStorage.getItem(tokenKey);
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
+        },
+        (error) => Promise.reject(error)
+    );
+
+    client.interceptors.response.use(
+        (response) => response.data,
+        (error) => {
+            console.error('API Error:', error.response?.data || error.message);
+
+            if (error.response?.status === 401) {
+                localStorage.removeItem(tokenKey);
+                localStorage.removeItem(userKey);
+                window.location.href = loginPath;
+            }
+
+            return Promise.reject(error.response?.data || error);
         }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+    );
 
-// Response interceptor for handling errors
-api.interceptors.response.use(
-    (response) => {
-        return response.data;
-    },
-    (error) => {
-        console.error('API Error:', error.response?.data || error.message);
+    return client;
+}
 
-        // Handle 401 unauthorized
-        if (error.response?.status === 401) {
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-            window.location.href = '/login';
-        }
+// Farmer-facing client
+const api = createApiClient('authToken', 'user', '/login');
 
-        return Promise.reject(error.response?.data || error);
-    }
-);
+// Admin-facing client — separate token/session from the farmer client above
+export const adminApi = createApiClient('adminToken', 'admin', '/admin/login');
 
 export default api;

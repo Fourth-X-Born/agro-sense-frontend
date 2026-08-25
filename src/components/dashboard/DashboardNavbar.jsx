@@ -1,33 +1,15 @@
-import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import NotificationDropdown from "./NotificationDropdown";
+import { useAuth } from "../../context/useAuth";
 
 const DashboardNavbar = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const currentPath = location.pathname;
-    const [user, setUser] = useState({});
-
-    useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem("user") || "{}");
-        setUser(userData);
-
-        // Listen for storage changes (when profile photo is updated)
-        const handleStorageChange = () => {
-            const updatedUser = JSON.parse(localStorage.getItem("user") || "{}");
-            setUser({...updatedUser}); // Force new object reference to trigger re-render
-        };
-        window.addEventListener("storage", handleStorageChange);
-        window.addEventListener("userUpdated", handleStorageChange);
-        return () => {
-            window.removeEventListener("storage", handleStorageChange);
-            window.removeEventListener("userUpdated", handleStorageChange);
-        };
-    }, []);
+    const { user, logout } = useAuth();
 
     const handleSignOut = () => {
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        logout();
         navigate("/");
     };
 
@@ -71,7 +53,7 @@ const DashboardNavbar = () => {
 
                     {/* Profile Avatar */}
                     <Link to="/settings" className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden hover:ring-2 hover:ring-primary/30 transition-all flex items-center justify-center flex-shrink-0">
-                        {user.profilePhoto && user.profilePhoto.length > 0 ? (
+                        {user?.profilePhoto && user.profilePhoto.length > 0 ? (
                             <img
                                 src={user.profilePhoto}
                                 alt="Profile"

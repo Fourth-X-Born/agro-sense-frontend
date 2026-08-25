@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "../components/Layout";
 import ProtectedRoute from "../components/ProtectedRoute";
+import AdminProtectedRoute from "../components/AdminProtectedRoute";
 import LandingPage from "../pages/LandingPage";
 import AuthPage from "../pages/AuthPage";
 import ProfileCompletionPage from "../pages/ProfileCompletionPage";
@@ -54,13 +55,13 @@ export default function AppRoutes() {
       <Route path="/admin/register" element={<AdminAuthPage />} />
 
       {/* Admin Routes */}
-      <Route path="/admin" element={<AdminDashboardPage />} />
-      <Route path="/admin/crops" element={<AdminCropsPage />} />
-      <Route path="/admin/crop-guides" element={<AdminCropGuidePage />} />
-      <Route path="/admin/market-prices" element={<AdminMarketPricesPage />} />
-      <Route path="/admin/fertilizer" element={<AdminFertilizerPage />} />
-      <Route path="/admin/farmers" element={<AdminFarmersPage />} />
-      <Route path="/admin/user-requests" element={<AdminUserRequestsPage />} />
+      <Route path="/admin" element={<AdminProtectedRoute><AdminDashboardPage /></AdminProtectedRoute>} />
+      <Route path="/admin/crops" element={<AdminProtectedRoute><AdminCropsPage /></AdminProtectedRoute>} />
+      <Route path="/admin/crop-guides" element={<AdminProtectedRoute><AdminCropGuidePage /></AdminProtectedRoute>} />
+      <Route path="/admin/market-prices" element={<AdminProtectedRoute><AdminMarketPricesPage /></AdminProtectedRoute>} />
+      <Route path="/admin/fertilizer" element={<AdminProtectedRoute><AdminFertilizerPage /></AdminProtectedRoute>} />
+      <Route path="/admin/farmers" element={<AdminProtectedRoute><AdminFarmersPage /></AdminProtectedRoute>} />
+      <Route path="/admin/user-requests" element={<AdminProtectedRoute><AdminUserRequestsPage /></AdminProtectedRoute>} />
     </Routes>
   );
 }

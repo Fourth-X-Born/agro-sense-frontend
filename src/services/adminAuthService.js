@@ -1,10 +1,10 @@
-import api from './api';
+import { adminApi } from './api';
 
 // Admin Authentication Service
 const adminAuthService = {
     // Login admin
     login: async (email, password) => {
-        const response = await api.post('/admin/auth/login', { email, password });
+        const response = await adminApi.post('/admin/auth/login', { email, password });
         if (response.success && response.data) {
             // Store admin auth data
             if (response.data.token) {
@@ -17,7 +17,7 @@ const adminAuthService = {
 
     // Register new admin
     register: async (adminData) => {
-        const response = await api.post('/admin/auth/register', adminData);
+        const response = await adminApi.post('/admin/auth/register', adminData);
         return response;
     },
 

@@ -7,10 +7,6 @@
   --font-family-inter: "Inter", sans-serif;
 }
 
-* {
-  font-family: "Inter", sans-serif;
-}
-
 :root {
   font-family: "Inter", sans-serif;
   background-color: var(--color-background-light);
@@ -24,6 +20,22 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   font-family: "Inter", sans-serif;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ===== ANIMATION KEYFRAMES ===== */

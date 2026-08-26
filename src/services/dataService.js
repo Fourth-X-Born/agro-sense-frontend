@@ -14,79 +14,24 @@ const dataService = {
         return response;
     },
 
-    // Get market prices with optional filters
-    // Uses admin endpoint when no filters are applied (requires auth)
-    // Falls back to public endpoint with filters
+    // Get market prices with optional filters (public endpoint)
     getMarketPrices: async (cropId = null, districtId = null) => {
-        // If no filters, use admin endpoint to get all data
-        if (!cropId && !districtId) {
-            try {
-                const response = await api.get('/admin/market-prices');
-                // Transform admin response to match expected format
-                if (Array.isArray(response)) {
-                    return {
-                        success: true,
-                        data: response.map(mp => ({
-                            id: mp.id,
-                            cropName: mp.crop?.name,
-                            cropId: mp.crop?.id,
-                            districtName: mp.district?.name,
-                            districtId: mp.district?.id,
-                            price: mp.pricePerKg,
-                            date: mp.priceDate
-                        }))
-                    };
-                }
-                return { success: true, data: response };
-            } catch (err) {
-                console.error("Admin endpoint failed, market prices may be empty:", err);
-                return { success: true, data: [] };
-            }
-        }
-
-        // With filters, use public endpoint
         const params = new URLSearchParams();
         if (cropId) params.append('cropId', cropId);
         if (districtId) params.append('districtId', districtId);
-        const url = `/market-prices?${params.toString()}`;
+        const query = params.toString();
+        const url = query ? `/market-prices?${query}` : '/market-prices';
         const response = await api.get(url);
         return response;
     },
 
-    // Get fertilizer recommendations with optional filters
+    // Get fertilizer recommendations with optional filters (public endpoint)
     getFertilizers: async (cropId = null, type = null) => {
-        // If no filters, use admin endpoint
-        if (!cropId && !type) {
-            try {
-                const response = await api.get('/admin/fertilizers');
-                if (Array.isArray(response)) {
-                    return {
-                        success: true,
-                        data: response.map(f => ({
-                            id: f.id,
-                            fertilizerName: f.fertilizerName,
-                            fertilizerType: f.fertilizerType,
-                            cropName: f.crop?.name,
-                            cropId: f.crop?.id,
-                            dosagePerHectare: f.dosagePerHectare,
-                            applicationStage: f.applicationStage,
-                            applicationMethod: f.applicationMethod,
-                            notes: f.notes
-                        }))
-                    };
-                }
-                return { success: true, data: response };
-            } catch (err) {
-                console.error("Admin endpoint failed:", err);
-                return { success: true, data: [] };
-            }
-        }
-
-        // With filters, use public endpoint
         const params = new URLSearchParams();
         if (cropId) params.append('cropId', cropId);
         if (type) params.append('type', type);
-        const url = `/fertilizers?${params.toString()}`;
+        const query = params.toString();
+        const url = query ? `/fertilizers?${query}` : '/fertilizers';
         const response = await api.get(url);
         return response;
     },

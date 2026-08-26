@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import ricePlantImg from "../assets/images/rice-plant-white-background-vector-eps-10_638232-733-removebg-preview.png";
 import authService from "../services/authService";
+import { useAuth } from "../context/useAuth";
 
 export default function AuthPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { login } = useAuth();
     const isLogin = location.pathname === "/login";
 
     const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +44,7 @@ export default function AuthPage() {
 
         try {
             setLoading(true);
-            const response = await authService.login(loginForm.email, loginForm.password);
+            const response = await login(loginForm.email, loginForm.password);
             if (response.success) {
                 navigate("/dashboard");
             } else {
@@ -75,7 +77,7 @@ export default function AuthPage() {
 
             if (response.success) {
                 // Auto-login after successful registration
-                await authService.login(registerForm.email, registerForm.password);
+                await login(registerForm.email, registerForm.password);
                 navigate("/complete-profile");
             } else {
                 setError(response.message || "Registration failed");

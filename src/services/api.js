@@ -34,7 +34,9 @@ function createApiClient(tokenKey, userKey, loginPath) {
             if (error.response?.status === 401) {
                 localStorage.removeItem(tokenKey);
                 localStorage.removeItem(userKey);
-                window.location.href = loginPath;
+                if (window.location.pathname !== loginPath) {
+                    window.location.href = loginPath;
+                }
             }
 
             return Promise.reject(error.response?.data || error);

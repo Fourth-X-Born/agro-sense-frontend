@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import adminAuthService from "../../services/adminAuthService";
+import { useAdminAuth } from "../../context/useAdminAuth";
 
 export default function AdminAuthPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { login } = useAdminAuth();
     const isLogin = location.pathname === "/admin/login";
 
     const [showPassword, setShowPassword] = useState(false);
@@ -44,7 +46,7 @@ export default function AdminAuthPage() {
 
         try {
             setLoading(true);
-            const response = await adminAuthService.login(loginForm.email, loginForm.password);
+            const response = await login(loginForm.email, loginForm.password);
             if (response.success) {
                 navigate("/admin");
             } else {

@@ -27,7 +27,7 @@ export default function LandingPrivacyPolicyPage() {
             color: "bg-green-500",
             content: [
                 { subtitle: "Service Delivery", icon: "rocket_launch", text: "We use your information to provide personalized crop guidance, weather alerts, and market insights." },
-                { subtitle: "Platform Improvement", icon: "trending_up", text: "Your usage data helps us improve our AI algorithms and develop new features." },
+                { subtitle: "Platform Improvement", icon: "trending_up", text: "Your usage data helps us improve our recommendation logic and develop new features." },
                 { subtitle: "Communication", icon: "notifications", text: "We may send you important updates about your crops and market opportunities." },
                 { subtitle: "Research & Analytics", icon: "science", text: "Aggregated data may be used for agricultural research to benefit the farming community." }
             ]

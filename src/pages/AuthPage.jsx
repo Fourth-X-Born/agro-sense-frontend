@@ -165,7 +165,7 @@ export default function AuthPage() {
                             <p className="text-gray-200 text-xs leading-relaxed transition-all duration-500">
                                 {isLogin
                                     ? "Access your personalized farming insights and continue growing smarter."
-                                    : "Join the smart farming revolution. Get localized AI advice for better harvests."
+                                    : "Join the smart farming revolution. Get localized farming advice for better harvests."
                                 }
                             </p>
                             <div className="flex items-center gap-1.5 mt-1">

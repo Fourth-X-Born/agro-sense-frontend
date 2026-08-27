@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
                 },
                 {
                     subtitle: "Platform Improvement",
-                    text: "Your usage data helps us improve our AI algorithms, enhance user experience, and develop new features that benefit the farming community."
+                    text: "Your usage data helps us improve our recommendation logic, enhance user experience, and develop new features that benefit the farming community."
                 },
                 {
                     subtitle: "Communication",

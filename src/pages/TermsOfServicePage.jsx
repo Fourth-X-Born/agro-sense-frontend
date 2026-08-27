@@ -34,7 +34,7 @@ export default function TermsOfServicePage() {
             icon: "apps",
             content: [
                 "AgroSense AI provides agricultural guidance, weather information, crop management tools, and market insights for informational purposes.",
-                "Our recommendations are based on AI analysis and should be used as guidance, not as definitive agricultural advice.",
+                "Our recommendations are based on automated analysis and should be used as guidance, not as definitive agricultural advice.",
                 "You acknowledge that farming decisions involve inherent risks, and AgroSense AI is not liable for crop losses or damages.",
                 "You agree to use the platform only for lawful purposes related to agricultural activities.",
                 "Automated scraping, data harvesting, or unauthorized access to our systems is strictly prohibited."
@@ -144,7 +144,7 @@ export default function TermsOfServicePage() {
                         <div>
                             <h2 className="text-sm font-bold mb-2">Welcome to AgroSense AI</h2>
                             <p className="text-xs text-white/90 leading-relaxed">
-                                These Terms of Service ("Terms") govern your access to and use of AgroSense AI's platform, including our website, mobile applications, and all related services. By creating an account or using our services, you agree to these Terms. Our mission is to empower Sri Lankan farmers with AI-driven agricultural insights while maintaining fair and transparent service conditions.
+                                These Terms of Service ("Terms") govern your access to and use of AgroSense AI's platform, including our website, mobile applications, and all related services. By creating an account or using our services, you agree to these Terms. Our mission is to empower Sri Lankan farmers with data-driven agricultural insights while maintaining fair and transparent service conditions.
                             </p>
                         </div>
                     </div>

@@ -1,113 +1,106 @@
-# AgroSense AI Frontend
+# AgroSense AI - Frontend
 
-A modern farming intelligence dashboard built with React + Vite + Tailwind CSS.
+React dashboard for AgroSense AI, an intelligent agricultural decision-support web platform built for Sri Lankan farmers. It covers weather-driven crop risk analysis, market prices, crop cultivation guides, and fertilizer recommendations, plus a full admin management panel. It talks to the [Spring Boot backend](https://github.com/Fourth-X-Born/agro-sense-AI-backend) over a JWT-secured REST API.
 
-## Prerequisites
+## What it does
 
-* **Node.js** v18 or higher
-* **npm** v9 or higher
+- **Personalized farmer dashboard**: greets the user by name, auto-detects the current cultivation season (Yala/Maha), and surfaces district weather, crop advisories, and market trends at a glance
+- **Crop risk analysis**: runs the backend's weather-driven risk engine for the farmer's selected crop and district, and displays score, level, explanation, and recommendations, with history
+- **Weather & alerts**: current conditions, forecasts, and severity-classified alerts per district
+- **Market prices**: browse and filter pricing by crop and district, with trend indicators
+- **Crop guide**: growth stages and DO/DON'T best-practice guidelines per crop
+- **Profile management**: two-step onboarding (district + crop selection), profile photo upload, password change
+- **Support**: a contact form (public, no login needed) and an interactive map of agricultural office locations
+- **Admin panel**: separate login, full CRUD for crops, districts, market prices, fertilizers, and crop guides, a farmer directory, and a contact message inbox with stats
 
-## Quick Start
+## Tech stack
 
-### 1. Clone the repository
+- React 19 with Vite 7
+- Tailwind CSS v4
+- React Router v7
+- Axios, using two independent API clients (farmer and admin), each attaching its own JWT
+- React Leaflet for the interactive map on the support page
+- jsPDF for exportable reports
 
-```bash
-git clone https://github.com/Fourth-X-Born/agro-sense-AI-frontend.git
-cd agro-sense-AI-frontend
+## Architecture
+
+```text
+src/
+  components/
+    dashboard/          Navbar, footer, notifications for logged-in farmer pages
+    landing/             Public marketing page sections
+    admin/                Admin panel layout and sidebar
+    ProtectedRoute.jsx    Gates farmer routes on AuthContext
+    AdminProtectedRoute.jsx  Gates admin routes on AdminAuthContext
+  context/
+    AuthContext.jsx, useAuth.js           Farmer session state (single source of truth)
+    AdminAuthContext.jsx, useAdminAuth.js  Admin session state, fully separate from the farmer's
+  pages/                    One file per route (see table below)
+    admin/                 Admin panel pages
+  routes/
+    AppRoutes.jsx          All route definitions
+  services/
+    api.js                Axios client factory. Builds the farmer client plus adminApi.
+    authService.js, adminAuthService.js  Login, register, logout, token storage
+    dataService.js        Weather, risk, market prices, crop guide, and profile calls
+    adminService.js       Admin CRUD calls
 ```
 
-### 2. Switch to dev branch
+Farmer and admin sessions are kept fully independent: separate `localStorage` token keys, separate Axios clients (so an admin token never leaks onto a farmer request or vice versa), and separate React contexts and route guards.
 
-```bash
-git checkout dev
-```
+## Available routes
 
-### 3. Install dependencies
+| Route | Description | Access |
+| --- | --- | --- |
+| `/` | Landing page | Public |
+| `/login`, `/register` | Auth forms | Public |
+| `/complete-profile` | Two-step profile completion | Farmer |
+| `/dashboard` | Farmer dashboard | Farmer |
+| `/crop-risk` | Crop risk assessment | Farmer |
+| `/weather` | Weather forecasts and alerts | Farmer |
+| `/market-prices` | Market price tracker | Farmer |
+| `/crop-guide` | Crop cultivation guide | Farmer |
+| `/settings` | Profile settings | Farmer |
+| `/contact`, `/contact-us` | Support contact form | Public |
+| `/privacy`, `/terms` (and landing variants) | Policy pages | Public |
+| `/admin/login`, `/admin/register` | Admin auth | Public |
+| `/admin`, `/admin/crops`, `/admin/crop-guides`, `/admin/market-prices`, `/admin/fertilizer`, `/admin/farmers`, `/admin/user-requests` | Admin panel | Admin |
+
+## Getting started
+
+### Prerequisites
+
+- Node.js v18 or higher
+- npm v9 or higher
+- The [backend](https://github.com/Fourth-X-Born/agro-sense-AI-backend) running locally on port 8080, or a deployed instance
+
+### 1. Install and run
 
 ```bash
 npm install
-```
-
-### 4. Run development server
-
-```bash
 npm run dev
 ```
 
-### 5. Open in browser
+Open the URL printed in the terminal, usually `http://localhost:5173`.
 
-Navigate to: **[http://localhost:5173](http://localhost:5173)** (or the port shown in terminal)
+### 2. Point at a different backend (optional)
 
----
+By default the app calls `http://localhost:8080/api`. To point elsewhere, set the `VITE_API_URL` environment variable to your backend's URL before running the dev server or build.
 
-## Project Structure
-
-```
-src/
-├── components/
-│   ├── dashboard/         # Shared dashboard components
-│   │   ├── DashboardNavbar.jsx
-│   │   └── DashboardFooter.jsx
-│   └── landing/           # Landing page components
-│       ├── Navbar.jsx
-│       ├── Hero.jsx
-│       ├── Features.jsx
-│       ├── HowItWorks.jsx
-│       └── CTASection.jsx
-├── pages/
-│   ├── LandingPage.jsx
-│   ├── AuthPage.jsx
-│   ├── DashboardPage.jsx
-│   ├── CropRiskPage.jsx
-│   ├── WeatherPage.jsx
-│   ├── MarketPricesPage.jsx
-│   ├── CropGuidePage.jsx
-│   └── ProfileSettingsPage.jsx
-├── routes/
-│   └── AppRoutes.jsx      # All route definitions
-└── index.css              # Tailwind config + custom styles
-```
-
-## Available Routes
-
-| Route            | Description             |
-| ---------------- | ----------------------- |
-| `/`              | Landing page            |
-| `/login`         | Login form              |
-| `/register`      | Registration form       |
-| `/dashboard`     | Farmer dashboard        |
-| `/crop-risk`     | AI crop risk assessment |
-| `/weather`       | Weather forecasts       |
-| `/market-prices` | Market price tracker    |
-| `/crop-guide`    | Crop cultivation guide  |
-| `/settings`      | User profile settings   |
-
-## Tech Stack
-
-* **React 18** - UI library
-* **Vite** - Build tool
-* **Tailwind CSS v4** - Styling
-* **React Router v6** - Routing
-* **Material Symbols** - Icons
-
-## Build for Production
+### Build for production
 
 ```bash
 npm run build
 ```
 
-Output will be in the `dist/` folder.
+Output goes to `dist/`. Configured for Vercel deployment (`vercel.json`).
 
 ## Team
 
-* **Name: Fourth X Born**
+Fourth X Born, DEV-55
 
-* **Number: DEV - 55**
-
-## Members
-
-* **Vibhath Kalsara**
-* **Isuru Adikaram**
-* **Ashen Randira**
-* **Dileepa Prabhath**
-* **Chanuka Ushan**
+- Vibhath Kalsara
+- Isuru Adikaram
+- Ashen Randira
+- Dileepa Prabhath
+- Chanuka Ushan

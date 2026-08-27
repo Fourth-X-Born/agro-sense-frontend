@@ -181,7 +181,7 @@ export default function CropRiskPage() {
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                                 {crops.length > 0 
-                                    ? "Running AI analysis for your district" 
+                                    ? "Running risk analysis for your district"
                                     : "Loading crops, districts & weather data"}
                             </p>
                         </div>
@@ -220,7 +220,7 @@ export default function CropRiskPage() {
             <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-6 animate-fade-in-up">
                 {/* Page Title */}
                 <div className="mb-6 animate-fade-in-left">
-                    <h1 className="text-xl font-bold text-[#131613]">AI Crop Risk Assessment</h1>
+                    <h1 className="text-xl font-bold text-[#131613]">Crop Risk Assessment</h1>
                     <p className="text-gray-500 text-xs">
                         Real-time intelligence for <span className="text-primary font-medium">{getSelectedDistrictName()}</span> • {getSelectedCropName()} Cultivation
                     </p>
@@ -393,10 +393,10 @@ export default function CropRiskPage() {
                             </div>
                         </div>
 
-                        {/* AI Analysis Result */}
+                        {/* Risk Analysis Result */}
                         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 animate-fade-in-up delay-300 hover:shadow-md transition-shadow">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-semibold text-sm text-[#131613]">AI Analysis Result</h3>
+                                <h3 className="font-semibold text-sm text-[#131613]">Risk Analysis Result</h3>
                                 <span className="text-[10px] text-gray-400">
                                     <span className="material-symbols-outlined text-xs align-middle mr-0.5">psychology</span>
                                     {analysisResult ? `Score: ${analysisResult.riskScore}%` : "Awaiting Analysis"}

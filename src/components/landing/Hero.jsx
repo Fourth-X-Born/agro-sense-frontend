@@ -17,7 +17,7 @@ const Hero = () => {
                     {/* Content */}
                     <div className="relative z-20 flex flex-col items-center justify-center min-h-[400px] px-8 py-10 text-center">
                         <h1 className="text-white text-3xl md:text-4xl font-bold leading-tight tracking-tight mb-3 max-w-2xl animate-fade-in-up">
-                            AI-Powered Crop Risk Advisory for Smarter Farming
+                            Intelligent Crop Risk Advisory for Smarter Farming
                         </h1>
                         <p className="text-gray-200 text-sm md:text-base font-normal leading-relaxed mb-6 max-w-xl animate-fade-in-up delay-200">
                             Empowering Sri Lankan farmers with real-time insights on weather, market trends, and crop health to maximize yield and minimize loss.

@@ -163,10 +163,10 @@ export default function DashboardPage() {
   const humidityStatus = getHumidityStatus(humidity);
   const rainfallInfo = getRainfallChance();
 
-  // Get first high-priority alert for AI Advisory
+  // Get first high-priority alert for the farming advisory
   const urgentAlert = weatherAlerts.find(a => a.severity === "HIGH" || a.severity === "CRITICAL") || weatherAlerts[0];
 
-  // Generate crop-specific AI advice based on weather and user's crop
+  // Generate crop-specific advice based on weather and user's crop
   const generateCropAdvice = () => {
     if (!weatherData) return null;
 
@@ -568,14 +568,14 @@ export default function DashboardPage() {
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - AI Advisory */}
+          {/* Left Column - Farming Advisory */}
           <div className="lg:col-span-2 animate-fade-in-up delay-400">
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-all duration-300">
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-lg animate-pulse-subtle">psychology</span>
-                  <span className="font-semibold text-sm text-[#131613]">AI Advisory • {currentSeason.name} Season</span>
+                  <span className="font-semibold text-sm text-[#131613]">Farming Advisory • {currentSeason.name} Season</span>
                 </div>
                 {cropAdvice?.priority === "high" && (
                   <span className="px-2.5 py-1 bg-red-50 text-red-500 text-[10px] font-medium rounded-full border border-red-200 animate-pulse">
@@ -677,7 +677,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1 text-left">
                     <p className="text-xs font-medium text-[#131613]">Analyze Crop Risk</p>
-                    <p className="text-[10px] text-gray-400">AI weather-based risk assessment</p>
+                    <p className="text-[10px] text-gray-400">Weather-based risk assessment</p>
                   </div>
                   <span className="material-symbols-outlined text-gray-400 text-sm group-hover:text-gray-600 group-hover:translate-x-1 transition-transform">chevron_right</span>
                 </Link>

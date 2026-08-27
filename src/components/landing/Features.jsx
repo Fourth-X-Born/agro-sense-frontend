@@ -25,7 +25,7 @@ const Features = () => {
         {
             icon: "leak_add",
             title: "Crop Risk Prediction",
-            description: "Analyze soil and environmental data using AI to predict potential disease risks before they spread, saving your harvest."
+            description: "Analyze weather and environmental data to predict potential disease risks before they spread, saving your harvest."
         },
         {
             icon: "opacity",

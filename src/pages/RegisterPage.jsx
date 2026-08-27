@@ -27,7 +27,7 @@ export default function RegisterPage() {
                   Empowering Sri Lankan Agriculture
                 </h2>
                 <p className="text-gray-200 text-[10px] leading-relaxed">
-                  Join the smart farming revolution. Get localized AI advice for better harvests.
+                  Join the smart farming revolution. Get localized farming advice for better harvests.
                 </p>
                 <div className="flex items-center gap-1 mt-1">
                   <div className="w-4 h-1 rounded-full bg-white"></div>

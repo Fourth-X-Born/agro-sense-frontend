@@ -1,4 +1,4 @@
-# AgroSense AI - Frontend
+# AgroSense - Frontend
 
 React dashboard for AgroSense AI, an intelligent agricultural decision-support web platform built for Sri Lankan farmers. It covers weather-driven crop risk analysis, market prices, crop cultivation guides, and fertilizer recommendations, plus a full admin management panel. It talks to the [Spring Boot backend](https://github.com/Fourth-X-Born/agro-sense-AI-backend) over a JWT-secured REST API.
 

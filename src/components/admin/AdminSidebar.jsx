@@ -31,7 +31,7 @@ const AdminSidebar = () => {
                     <div className="flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary text-xl flex-shrink-0">spa</span>
                         <span className="text-[#131613] text-sm font-bold whitespace-nowrap">
-                            Agro<span className="text-primary">Sense</span> AI
+                            Agro<span className="text-primary">Sense</span>
                         </span>
                     </div>
                     <span className="ml-7 px-1.5 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-medium rounded w-fit">

@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
             content: [
                 {
                     subtitle: "Personal Information",
-                    text: "When you register for AgroSense AI, we collect your name, email address, phone number, and farm location. This information helps us provide personalized agricultural recommendations."
+                    text: "When you register for AgroSense, we collect your name, email address, phone number, and farm location. This information helps us provide personalized agricultural recommendations."
                 },
                 {
                     subtitle: "Farm Data",
@@ -165,7 +165,7 @@ export default function PrivacyPolicyPage() {
                         <div>
                             <h2 className="text-sm font-bold text-[#131613] mb-2">Our Commitment to Your Privacy</h2>
                             <p className="text-xs text-gray-600 leading-relaxed">
-                                At AgroSense AI, we understand that your farm data is sensitive and valuable. We are committed to protecting your privacy and ensuring that your personal and agricultural information is handled securely and transparently. This Privacy Policy explains how we collect, use, share, and protect your information when you use our platform.
+                                At AgroSense, we understand that your farm data is sensitive and valuable. We are committed to protecting your privacy and ensuring that your personal and agricultural information is handled securely and transparently. This Privacy Policy explains how we collect, use, share, and protect your information when you use our platform.
                             </p>
                         </div>
                     </div>

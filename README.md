@@ -93,7 +93,7 @@ By default the app calls `http://localhost:8080/api`. To point elsewhere, set th
 npm run build
 ```
 
-Output goes to `dist/`. Configured for Vercel deployment (`vercel.json`).
+Output goes to `dist/`. Configured for Netlify deployment (`netlify.toml`).
 
 ## Team
 

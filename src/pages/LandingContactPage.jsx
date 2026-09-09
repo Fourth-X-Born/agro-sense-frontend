@@ -100,7 +100,7 @@ export default function LandingContactPage() {
             coordinates: [7.2647, 80.5959]
         },
         {
-            department: "AgroSense AI Support",
+            department: "AgroSense Support",
             description: "Technical support, app assistance, and feature inquiries",
             phone: "+94 77 1234567",
             email: "support@agrosense.ai",
@@ -312,7 +312,7 @@ export default function LandingContactPage() {
 
                             {/* CTA to Register */}
                             <div className="bg-primary rounded-xl p-4 text-white">
-                                <h3 className="text-sm font-bold mb-2">Join AgroSense AI</h3>
+                                <h3 className="text-sm font-bold mb-2">Join AgroSense</h3>
                                 <p className="text-xs text-white/80 mb-4">
                                     Get personalized crop guidance, weather alerts, and market insights
                                 </p>

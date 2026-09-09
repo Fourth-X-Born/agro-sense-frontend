@@ -368,7 +368,7 @@ export default function AdminAuthPage() {
                 <div className="mt-6 text-center">
                     <div className="inline-flex items-center gap-2 text-gray-400 text-xs">
                         <span className="material-symbols-outlined text-sm">verified_user</span>
-                        Secure admin access • AgroSense AI
+                        Secure admin access • AgroSense
                     </div>
                 </div>
             </div>

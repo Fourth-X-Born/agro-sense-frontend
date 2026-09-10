@@ -1,6 +1,8 @@
-# AgroSense - Frontend
+# AgroSense AI - Frontend
 
-React dashboard for AgroSense AI, an intelligent agricultural decision-support web platform built for Sri Lankan farmers. It covers weather-driven crop risk analysis, market prices, crop cultivation guides, and fertilizer recommendations, plus a full admin management panel. It talks to the [Spring Boot backend](https://github.com/Fourth-X-Born/agro-sense-AI-backend) over a JWT-secured REST API.
+**Live Web:** `https://agrosense-web.netlify.app`
+
+React dashboard for AgroSense AI, an intelligent agricultural decision-support web platform built for Sri Lankan farmers. It covers weather-driven crop risk analysis, market prices, crop cultivation guides, and fertilizer recommendations, plus a full admin management panel. It talks to the [Spring Boot backend](https://github.com/Fourth-X-Born/agro-sense-AI-backend) (Live at `https://agro-sense-backend-km1l.onrender.com`) over a JWT-secured REST API.
 
 ## What it does
 
@@ -12,6 +14,7 @@ React dashboard for AgroSense AI, an intelligent agricultural decision-support w
 - **Profile management**: two-step onboarding (district + crop selection), profile photo upload, password change
 - **Support**: a contact form (public, no login needed) and an interactive map of agricultural office locations
 - **Admin panel**: separate login, full CRUD for crops, districts, market prices, fertilizers, and crop guides, a farmer directory, and a contact message inbox with stats
+- **Robust Data Validation**: Comprehensive inline field-level validation across all forms (strict Sri Lankan phone number formats, robust password strength checks, email validation) ensuring data integrity before hitting the API.
 
 ## Tech stack
 
@@ -93,7 +96,7 @@ By default the app calls `http://localhost:8080/api`. To point elsewhere, set th
 npm run build
 ```
 
-Output goes to `dist/`. Configured for Netlify deployment (`netlify.toml`).
+Output goes to `dist/`. Fully configured for seamless deployment on **Netlify** (via `netlify.toml`). Make sure to set `VITE_API_URL=https://agro-sense-backend-km1l.onrender.com/api` (or your backend URL) in your Netlify environment variables before deploying.
 
 ## Team
 

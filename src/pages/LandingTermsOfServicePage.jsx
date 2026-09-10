@@ -15,7 +15,7 @@ export default function LandingTermsOfServicePage() {
             icon: "handshake",
             color: "bg-blue-500",
             content: [
-                "By accessing or using AgroSense AI, you agree to be bound by these Terms of Service.",
+                "By accessing or using AgroSense, you agree to be bound by these Terms of Service.",
                 "If you do not agree with any of these terms, you are prohibited from using this platform.",
                 "We reserve the right to modify these terms at any time.",
                 "You must be at least 18 years old to use this service."
@@ -40,7 +40,7 @@ export default function LandingTermsOfServicePage() {
             icon: "apps",
             color: "bg-purple-500",
             content: [
-                "AgroSense AI provides agricultural guidance, weather information, and market insights for informational purposes.",
+                "AgroSense provides agricultural guidance, weather information, and market insights for informational purposes.",
                 "Our recommendations are based on automated analysis and should be used as guidance, not as definitive advice.",
                 "You acknowledge that farming decisions involve inherent risks.",
                 "You agree to use the platform only for lawful purposes related to agricultural activities.",
@@ -53,7 +53,7 @@ export default function LandingTermsOfServicePage() {
             icon: "payments",
             color: "bg-amber-500",
             content: [
-                "Basic features of AgroSense AI are provided free of charge.",
+                "Basic features of AgroSense are provided free of charge.",
                 "Premium features may require a subscription with clear pricing.",
                 "Subscription fees are billed in advance on a monthly or annual basis.",
                 "Refunds are available within 7 days of purchase.",
@@ -66,10 +66,10 @@ export default function LandingTermsOfServicePage() {
             icon: "copyright",
             color: "bg-rose-500",
             content: [
-                "All content and functionality of AgroSense AI are owned by us and protected by law.",
+                "All content and functionality of AgroSense are owned by us and protected by law.",
                 "You may not copy, modify, or distribute our content without permission.",
                 "User-generated content remains your property with a license granted to us.",
-                "The AgroSense AI name and logo are our trademarks."
+                "The AgroSense name and logo are our trademarks."
             ]
         },
         {
@@ -78,7 +78,7 @@ export default function LandingTermsOfServicePage() {
             icon: "security",
             color: "bg-teal-500",
             content: [
-                "Your use of AgroSense AI is also governed by our Privacy Policy.",
+                "Your use of AgroSense is also governed by our Privacy Policy.",
                 "By using our services, you consent to data collection as described in our Privacy Policy.",
                 "You are responsible for ensuring the accuracy of the farm data you provide.",
                 "We implement industry-standard security measures to protect your data."
@@ -90,7 +90,7 @@ export default function LandingTermsOfServicePage() {
             icon: "warning",
             color: "bg-orange-500",
             content: [
-                "AgroSense AI is provided \"as is\" without warranties of any kind.",
+                "AgroSense is provided \"as is\" without warranties of any kind.",
                 "We do not guarantee uninterrupted, timely, secure, or error-free services.",
                 "Weather forecasts and crop recommendations may not be 100% accurate.",
                 "We are not responsible for decisions made based on our platform's information.",
@@ -103,7 +103,7 @@ export default function LandingTermsOfServicePage() {
             icon: "gavel",
             color: "bg-indigo-500",
             content: [
-                "AgroSense AI shall not be liable for any indirect or consequential damages.",
+                "AgroSense shall not be liable for any indirect or consequential damages.",
                 "Our total liability shall not exceed the amount you paid in the past 12 months.",
                 "This limitation applies to all causes of action.",
                 "Some jurisdictions do not allow limitation of liability."
@@ -136,7 +136,7 @@ export default function LandingTermsOfServicePage() {
     ];
 
     const quickSummary = [
-        { icon: "check_circle", text: "Use AgroSense AI responsibly for agricultural purposes" },
+        { icon: "check_circle", text: "Use AgroSense responsibly for agricultural purposes" },
         { icon: "info", text: "Our recommendations are guidance, not guarantees" },
         { icon: "lock", text: "Keep your account secure and information accurate" },
         { icon: "card_giftcard", text: "Basic features are free; premium requires subscription" },
@@ -180,7 +180,7 @@ export default function LandingTermsOfServicePage() {
                             </div>
                             <h1 className="text-4xl md:text-5xl font-bold mb-4">Terms of Service</h1>
                             <p className="text-white/80 text-sm md:text-base max-w-2xl mx-auto mb-6">
-                                Please read these terms carefully before using AgroSense AI. By using our platform, you agree to these terms.
+                                Please read these terms carefully before using AgroSense. By using our platform, you agree to these terms.
                             </p>
                             <div className="flex items-center justify-center gap-4 text-xs text-white/70">
                                 <span className="flex items-center gap-1">
@@ -248,9 +248,9 @@ export default function LandingTermsOfServicePage() {
                                         <span className="material-symbols-outlined text-2xl">description</span>
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-bold mb-2">Welcome to AgroSense AI</h2>
+                                        <h2 className="text-lg font-bold mb-2">Welcome to AgroSense</h2>
                                         <p className="text-sm text-white/80 leading-relaxed">
-                                            These Terms of Service govern your access to and use of AgroSense AI's platform. By creating an account or using our services, you agree to these Terms. Our mission is to empower Sri Lankan farmers with data-driven agricultural insights.
+                                            These Terms of Service govern your access to and use of AgroSense's platform. By creating an account or using our services, you agree to these Terms. Our mission is to empower Sri Lankan farmers with data-driven agricultural insights.
                                         </p>
                                     </div>
                                 </div>

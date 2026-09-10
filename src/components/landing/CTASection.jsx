@@ -32,7 +32,7 @@ const CTASection = () => {
                     <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-black/10 rounded-full blur-2xl animate-float delay-500"></div>
                     <div className={`flex flex-col gap-2 relative z-10 text-center md:text-left ${isVisible ? 'animate-fade-in-left delay-200' : 'opacity-0'}`}>
                         <h2 className="text-white text-xl md:text-2xl font-bold">Ready to modernize your farm?</h2>
-                        <p className="text-white/90 text-sm max-w-md">Join thousands of Sri Lankan farmers using <span className="font-bold">Agro<span className="text-green-300">Sense</span> AI</span> today.</p>
+                        <p className="text-white/90 text-sm max-w-md">Join thousands of Sri Lankan farmers using <span className="font-bold">Agro<span className="text-green-300">Sense</span></span> today.</p>
                     </div>
                     <div className={`relative z-10 w-full md:w-auto flex justify-center md:justify-end ${isVisible ? 'animate-fade-in-right delay-400' : 'opacity-0'}`}>
                         <Link

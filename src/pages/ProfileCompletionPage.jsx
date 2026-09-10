@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import ricePlantImg from "../assets/images/rice-plant-white-background-vector-eps-10_638232-733-removebg-preview.png";
 import dataService from "../services/dataService";
 import authService from "../services/authService";
+import { validatePhone, runValidations, validateRequired } from "../utils/validators";
 
 export default function ProfileCompletionPage() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
     const [districtOpen, setDistrictOpen] = useState(false);
     const [cropOpen, setCropOpen] = useState(false);
     const [districts, setDistricts] = useState([]);
@@ -80,6 +82,7 @@ export default function ProfileCompletionPage() {
             districtId: district.id,
             districtName: district.name
         }));
+        setFieldErrors(prev => ({ ...prev, districtId: "" }));
         setDistrictOpen(false);
     };
 
@@ -89,6 +92,7 @@ export default function ProfileCompletionPage() {
             cropId: crop.id,
             cropName: crop.name
         }));
+        setFieldErrors(prev => ({ ...prev, cropId: "" }));
         setCropOpen(false);
     };
 
@@ -96,10 +100,13 @@ export default function ProfileCompletionPage() {
         e.preventDefault();
         setError("");
 
-        if (!formData.phone || !formData.districtId || !formData.cropId) {
-            setError("Please fill in all fields");
-            return;
-        }
+        const { errors, isValid } = runValidations({
+            phone: validatePhone(formData.phone, true),
+            districtId: validateRequired(formData.districtId ? String(formData.districtId) : "", "District"),
+            cropId: validateRequired(formData.cropId ? String(formData.cropId) : "", "Primary crop"),
+        });
+        setFieldErrors(errors);
+        if (!isValid) return;
 
         try {
             setLoading(true);

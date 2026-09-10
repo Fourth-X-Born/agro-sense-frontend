@@ -4,6 +4,7 @@ import DashboardNavbar from "../components/dashboard/DashboardNavbar";
 import DashboardFooter from "../components/dashboard/DashboardFooter";
 import dataService from "../services/dataService";
 import authService from "../services/authService";
+import { validateRequired, validatePhone, validatePassword, validateConfirmPassword, runValidations } from "../utils/validators";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
@@ -19,6 +20,7 @@ export default function ProfileSettingsPage() {
     const [successMessage, setSuccessMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [profilePhoto, setProfilePhoto] = useState(null);
+    const [fieldErrors, setFieldErrors] = useState({});
 
     // Password change modal state
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -114,6 +116,18 @@ export default function ProfileSettingsPage() {
             setSaving(true);
             setErrorMessage("");
             setSuccessMessage("");
+            setFieldErrors({});
+
+            // Validate before saving
+            const { errors, isValid } = runValidations({
+                fullName: validateRequired(formData.fullName, "Full name", 2),
+                phone: validatePhone(formData.phone, false),
+            });
+            if (!isValid) {
+                setFieldErrors(errors);
+                setSaving(false);
+                return;
+            }
 
             const userData = JSON.parse(localStorage.getItem("user") || "{}");
             if (!userData?.id) {
@@ -169,18 +183,20 @@ export default function ProfileSettingsPage() {
         setPasswordSuccess("");
 
         // Validate
-        if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-            setPasswordError("All fields are required");
+        if (!passwordData.currentPassword) {
+            setPasswordError("Current password is required");
             return;
         }
 
-        if (passwordData.newPassword.length < 6) {
-            setPasswordError("New password must be at least 6 characters");
+        const pwdError = validatePassword(passwordData.newPassword);
+        if (pwdError) {
+            setPasswordError(pwdError);
             return;
         }
 
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            setPasswordError("New passwords do not match");
+        const confirmError = validateConfirmPassword(passwordData.newPassword, passwordData.confirmPassword);
+        if (confirmError) {
+            setPasswordError(confirmError);
             return;
         }
 

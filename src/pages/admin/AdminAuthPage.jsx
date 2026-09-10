@@ -2,6 +2,14 @@ import React, { useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import adminAuthService from "../../services/adminAuthService";
 import { useAdminAuth } from "../../context/useAdminAuth";
+import {
+    validateEmail,
+    validatePassword,
+    validateConfirmPassword,
+    validateRequired,
+    validatePhone,
+    runValidations,
+} from "../../utils/validators";
 
 export default function AdminAuthPage() {
     const location = useLocation();
@@ -12,6 +20,7 @@ export default function AdminAuthPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
 
     // Login form state
     const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -27,11 +36,13 @@ export default function AdminAuthPage() {
 
     const switchToLogin = () => {
         setError("");
+        setFieldErrors({});
         navigate("/admin/login");
     };
 
     const switchToRegister = () => {
         setError("");
+        setFieldErrors({});
         navigate("/admin/register");
     };
 
@@ -39,10 +50,12 @@ export default function AdminAuthPage() {
         e.preventDefault();
         setError("");
 
-        if (!loginForm.email || !loginForm.password) {
-            setError("Please fill in all fields");
-            return;
-        }
+        const { errors, isValid } = runValidations({
+            email: validateEmail(loginForm.email),
+            password: validateRequired(loginForm.password, "Password"),
+        });
+        setFieldErrors(errors);
+        if (!isValid) return;
 
         try {
             setLoading(true);
@@ -64,20 +77,15 @@ export default function AdminAuthPage() {
         e.preventDefault();
         setError("");
 
-        if (!registerForm.name || !registerForm.email || !registerForm.password) {
-            setError("Please fill in all required fields");
-            return;
-        }
-
-        if (registerForm.password !== registerForm.confirmPassword) {
-            setError("Passwords do not match");
-            return;
-        }
-
-        if (registerForm.password.length < 6) {
-            setError("Password must be at least 6 characters");
-            return;
-        }
+        const { errors, isValid } = runValidations({
+            name: validateRequired(registerForm.name, "Full name", 2),
+            email: validateEmail(registerForm.email),
+            phone: validatePhone(registerForm.phone, false),
+            password: validatePassword(registerForm.password),
+            confirmPassword: validateConfirmPassword(registerForm.password, registerForm.confirmPassword),
+        });
+        setFieldErrors(errors);
+        if (!isValid) return;
 
         try {
             setLoading(true);
@@ -180,9 +188,19 @@ export default function AdminAuthPage() {
                                         value={loginForm.email}
                                         onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                                         placeholder="admin@agrosense.com"
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                                            fieldErrors.email
+                                                ? "border-red-400 focus:ring-red-200"
+                                                : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                        }`}
                                     />
                                 </div>
+                                {fieldErrors.email && (
+                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-xs">error</span>
+                                        {fieldErrors.email}
+                                    </p>
+                                )}
                             </div>
 
                             <div>
@@ -198,7 +216,11 @@ export default function AdminAuthPage() {
                                         value={loginForm.password}
                                         onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                                         placeholder="Enter your password"
-                                        className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                                            fieldErrors.password
+                                                ? "border-red-400 focus:ring-red-200"
+                                                : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                        }`}
                                     />
                                     <button
                                         type="button"
@@ -210,6 +232,12 @@ export default function AdminAuthPage() {
                                         </span>
                                     </button>
                                 </div>
+                                {fieldErrors.password && (
+                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-xs">error</span>
+                                        {fieldErrors.password}
+                                    </p>
+                                )}
                             </div>
 
                             <button
@@ -246,9 +274,14 @@ export default function AdminAuthPage() {
                                         value={registerForm.name}
                                         onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
                                         placeholder="Enter your full name"
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                                            fieldErrors.name ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                        }`}
                                     />
                                 </div>
+                                {fieldErrors.name && (
+                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><span className="material-symbols-outlined text-xs">error</span>{fieldErrors.name}</p>
+                                )}
                             </div>
 
                             <div>
@@ -264,9 +297,14 @@ export default function AdminAuthPage() {
                                         value={registerForm.email}
                                         onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
                                         placeholder="Enter your email"
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                                            fieldErrors.email ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                        }`}
                                     />
                                 </div>
+                                {fieldErrors.email && (
+                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><span className="material-symbols-outlined text-xs">error</span>{fieldErrors.email}</p>
+                                )}
                             </div>
 
                             <div>
@@ -281,10 +319,15 @@ export default function AdminAuthPage() {
                                         type="tel"
                                         value={registerForm.phone}
                                         onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
-                                        placeholder="Enter your phone number"
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        placeholder="07XXXXXXXX or +94XXXXXXXXX"
+                                        className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                                            fieldErrors.phone ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                        }`}
                                     />
                                 </div>
+                                {fieldErrors.phone && (
+                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><span className="material-symbols-outlined text-xs">error</span>{fieldErrors.phone}</p>
+                                )}
                             </div>
 
                             <div>
@@ -299,8 +342,10 @@ export default function AdminAuthPage() {
                                         type={showPassword ? "text" : "password"}
                                         value={registerForm.password}
                                         onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                                        placeholder="Min. 6 characters"
-                                        className="w-full pl-10 pr-12 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        placeholder="Min. 8 chars, 1 uppercase, 1 number"
+                                        className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                                            fieldErrors.password ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                        }`}
                                     />
                                     <button
                                         type="button"
@@ -312,6 +357,9 @@ export default function AdminAuthPage() {
                                         </span>
                                     </button>
                                 </div>
+                                {fieldErrors.password && (
+                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><span className="material-symbols-outlined text-xs">error</span>{fieldErrors.password}</p>
+                                )}
                             </div>
 
                             <div>
@@ -327,9 +375,14 @@ export default function AdminAuthPage() {
                                         value={registerForm.confirmPassword}
                                         onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
                                         placeholder="Confirm your password"
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-all ${
+                                            fieldErrors.confirmPassword ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                        }`}
                                     />
                                 </div>
+                                {fieldErrors.confirmPassword && (
+                                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1"><span className="material-symbols-outlined text-xs">error</span>{fieldErrors.confirmPassword}</p>
+                                )}
                             </div>
 
                             <button
@@ -368,7 +421,7 @@ export default function AdminAuthPage() {
                 <div className="mt-6 text-center">
                     <div className="inline-flex items-center gap-2 text-gray-400 text-xs">
                         <span className="material-symbols-outlined text-sm">verified_user</span>
-                        Secure admin access • AgroSense AI
+                        Secure admin access • AgroSense
                     </div>
                 </div>
             </div>

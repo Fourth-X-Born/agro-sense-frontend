@@ -14,7 +14,7 @@ export default function LandingPrivacyPolicyPage() {
             icon: "database",
             color: "bg-blue-500",
             content: [
-                { subtitle: "Personal Information", icon: "person", text: "When you register for AgroSense AI, we collect your name, email address, phone number, and farm location." },
+                { subtitle: "Personal Information", icon: "person", text: "When you register for AgroSense, we collect your name, email address, phone number, and farm location." },
                 { subtitle: "Farm Data", icon: "agriculture", text: "We collect information about your crops, land area, soil type, and farming practices." },
                 { subtitle: "Usage Data", icon: "analytics", text: "We automatically collect data about how you interact with our platform." },
                 { subtitle: "Location Data", icon: "location_on", text: "With your permission, we collect location data to provide localized recommendations." }
@@ -180,7 +180,7 @@ export default function LandingPrivacyPolicyPage() {
                                     <div>
                                         <h2 className="text-lg font-bold text-[#131613] mb-2">Our Commitment to Your Privacy</h2>
                                         <p className="text-sm text-gray-600 leading-relaxed">
-                                            At AgroSense AI, we understand that your farm data is sensitive and valuable. This Privacy Policy explains how we collect, use, share, and protect your information.
+                                            At AgroSense, we understand that your farm data is sensitive and valuable. This Privacy Policy explains how we collect, use, share, and protect your information.
                                         </p>
                                     </div>
                                 </div>
@@ -226,7 +226,7 @@ export default function LandingPrivacyPolicyPage() {
                                 <div className="relative z-10 text-center">
                                     <span className="material-symbols-outlined text-4xl mb-4">agriculture</span>
                                     <h3 className="text-xl font-bold mb-2">Ready to Start Farming Smarter?</h3>
-                                    <p className="text-sm text-white/80 mb-6 max-w-md mx-auto">Join thousands of Sri Lankan farmers using AgroSense AI</p>
+                                    <p className="text-sm text-white/80 mb-6 max-w-md mx-auto">Join thousands of Sri Lankan farmers using AgroSense</p>
                                     <div className="flex justify-center gap-3">
                                         <Link to="/register" className="px-6 py-3 bg-white text-primary text-sm font-medium rounded-xl hover:bg-white/90 transition-all shadow-lg">Create Free Account</Link>
                                         <Link to="/terms-of-service" className="px-6 py-3 bg-white/10 text-white text-sm font-medium rounded-xl hover:bg-white/20 transition-all">View Terms</Link>

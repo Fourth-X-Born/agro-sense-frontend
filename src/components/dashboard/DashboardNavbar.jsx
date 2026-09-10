@@ -27,7 +27,7 @@ const DashboardNavbar = () => {
                 {/* Logo */}
                 <Link to="/dashboard" className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary text-xl">spa</span>
-                    <span className="text-[#131613] text-sm font-bold">Agro<span className="text-primary">Sense</span> AI</span>
+                    <span className="text-[#131613] text-sm font-bold">Agro<span className="text-primary">Sense</span></span>
                 </Link>
 
                 {/* Navigation */}

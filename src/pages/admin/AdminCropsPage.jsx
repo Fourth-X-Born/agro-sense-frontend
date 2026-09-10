@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import AdminLayout from "../../components/admin/AdminLayout";
 import adminService from "../../services/adminService";
+import { validateRequired } from "../../utils/validators";
 
 export default function AdminCropsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [newCropName, setNewCropName] = useState("");
+    const [cropNameError, setCropNameError] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [crops, setCrops] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -45,16 +47,19 @@ export default function AdminCropsPage() {
 
     const handleAddCrop = async (e) => {
         e.preventDefault();
-        if (!newCropName.trim()) return;
+        const nameError = validateRequired(newCropName, "Crop name", 2);
+        setCropNameError(nameError);
+        if (nameError) return;
 
         try {
             setSubmitting(true);
             await adminService.createCrop({ name: newCropName.trim() });
             setNewCropName("");
+            setCropNameError("");
             fetchCrops(); // Refresh list
         } catch (err) {
             console.error("Error creating crop:", err);
-            alert("Failed to create crop");
+            setCropNameError("Failed to create crop. Please try again.");
         } finally {
             setSubmitting(false);
         }
@@ -238,29 +243,39 @@ export default function AdminCropsPage() {
                 {/* Add New Crop Form */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 animate-fade-in-up delay-200">
                     <h3 className="text-base font-bold text-[#131613] mb-4">Add New Crop</h3>
-                    <form onSubmit={handleAddCrop} className="flex items-end gap-4">
+                    <form onSubmit={handleAddCrop} className="flex items-start gap-4">
                         <div className="flex-1 max-w-md">
                             <label className="block text-xs font-medium text-gray-600 mb-2">Crop Name</label>
                             <input
                                 type="text"
-                                placeholder="Enter crop name"
+                                placeholder="Enter crop name (min 2 characters)"
                                 value={newCropName}
-                                onChange={(e) => setNewCropName(e.target.value)}
-                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                onChange={(e) => { setNewCropName(e.target.value); if (cropNameError) setCropNameError(""); }}
+                                className={`w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
+                                    cropNameError ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                }`}
                             />
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={submitting || !newCropName.trim()}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md btn-hover disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {submitting ? (
-                                <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
-                            ) : (
-                                <span className="material-symbols-outlined text-lg">add</span>
+                            {cropNameError && (
+                                <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-xs">error</span>
+                                    {cropNameError}
+                                </p>
                             )}
-                            {submitting ? "Adding..." : "Add Crop"}
-                        </button>
+                        </div>
+                        <div className="pt-6">
+                            <button
+                                type="submit"
+                                disabled={submitting}
+                                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-all shadow-sm hover:shadow-md btn-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {submitting ? (
+                                    <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+                                ) : (
+                                    <span className="material-symbols-outlined text-lg">add</span>
+                                )}
+                                {submitting ? "Adding..." : "Add Crop"}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

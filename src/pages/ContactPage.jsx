@@ -87,7 +87,7 @@ export default function ContactPage() {
             coordinates: [7.2647, 80.5959]
         },
         {
-            department: "AgroSense AI Support",
+            department: "AgroSense Support",
             description: "Technical support, app assistance, and feature inquiries",
             phone: "+94 77 1234567",
             email: "support@agrosense.ai",

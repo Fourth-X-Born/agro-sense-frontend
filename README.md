@@ -1,8 +1,8 @@
-# AgroSense AI - Frontend
+# AgroSense - Frontend
 
 **Live Web:** `https://agrosense-web.netlify.app`
 
-React dashboard for AgroSense AI, an intelligent agricultural decision-support web platform built for Sri Lankan farmers. It covers weather-driven crop risk analysis, market prices, crop cultivation guides, and fertilizer recommendations, plus a full admin management panel. It talks to the [Spring Boot backend](https://github.com/Fourth-X-Born/agro-sense-AI-backend) (Live at `https://agro-sense-backend-km1l.onrender.com`) over a JWT-secured REST API.
+React dashboard for AgroSense, an agricultural decision-support web platform built for Sri Lankan farmers. It covers weather-driven crop risk analysis, market prices, crop cultivation guides, and fertilizer recommendations, plus a full admin management panel. It talks to the [Spring Boot backend](https://github.com/Fourth-X-Born/agro-sense-AI-backend) (Live at `https://agro-sense-backend-km1l.onrender.com`) over a JWT-secured REST API.
 
 ## What it does
 

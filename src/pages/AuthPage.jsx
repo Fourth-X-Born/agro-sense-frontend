@@ -3,6 +3,12 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import ricePlantImg from "../assets/images/rice-plant-white-background-vector-eps-10_638232-733-removebg-preview.png";
 import authService from "../services/authService";
 import { useAuth } from "../context/useAuth";
+import {
+    validateEmail,
+    validatePassword,
+    validateRequired,
+    runValidations,
+} from "../utils/validators";
 
 export default function AuthPage() {
     const location = useLocation();
@@ -13,6 +19,7 @@ export default function AuthPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
 
     // Login form state
     const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -26,10 +33,12 @@ export default function AuthPage() {
 
     const switchToLogin = () => {
         setError("");
+        setFieldErrors({});
         navigate("/login");
     };
     const switchToRegister = () => {
         setError("");
+        setFieldErrors({});
         navigate("/register");
     };
 
@@ -37,10 +46,12 @@ export default function AuthPage() {
         e.preventDefault();
         setError("");
 
-        if (!loginForm.email || !loginForm.password) {
-            setError("Please fill in all fields");
-            return;
-        }
+        const { errors, isValid } = runValidations({
+            email: validateEmail(loginForm.email),
+            password: validateRequired(loginForm.password, "Password"),
+        });
+        setFieldErrors(errors);
+        if (!isValid) return;
 
         try {
             setLoading(true);
@@ -62,10 +73,13 @@ export default function AuthPage() {
         e.preventDefault();
         setError("");
 
-        if (!registerForm.name || !registerForm.email || !registerForm.password) {
-            setError("Please fill in all fields");
-            return;
-        }
+        const { errors, isValid } = runValidations({
+            name: validateRequired(registerForm.name, "Full name", 2),
+            email: validateEmail(registerForm.email),
+            password: validatePassword(registerForm.password),
+        });
+        setFieldErrors(errors);
+        if (!isValid) return;
 
         try {
             setLoading(true);
@@ -76,7 +90,6 @@ export default function AuthPage() {
             });
 
             if (response.success) {
-                // Auto-login after successful registration
                 await login(registerForm.email, registerForm.password);
                 navigate("/complete-profile");
             } else {
@@ -248,9 +261,19 @@ export default function AuthPage() {
                                                 placeholder="e.g. person@gmail.com"
                                                 value={loginForm.email}
                                                 onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
-                                                className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
+                                                className={`w-full h-9 pl-9 pr-3 rounded-lg border-2 text-xs focus:outline-none transition-colors ${
+                                                    fieldErrors.email
+                                                        ? "border-red-400 focus:border-red-400"
+                                                        : "border-gray-300 focus:border-primary"
+                                                }`}
                                             />
                                         </div>
+                                        {fieldErrors.email && (
+                                            <p className="text-[10px] text-red-500 flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-xs">error</span>
+                                                {fieldErrors.email}
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Password */}
@@ -263,7 +286,11 @@ export default function AuthPage() {
                                                 placeholder="Enter your password"
                                                 value={loginForm.password}
                                                 onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                                                className="w-full h-9 pl-9 pr-9 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
+                                                className={`w-full h-9 pl-9 pr-9 rounded-lg border-2 text-xs focus:outline-none transition-colors ${
+                                                    fieldErrors.password
+                                                        ? "border-red-400 focus:border-red-400"
+                                                        : "border-gray-300 focus:border-primary"
+                                                }`}
                                             />
                                             <button
                                                 type="button"
@@ -275,6 +302,12 @@ export default function AuthPage() {
                                                 </span>
                                             </button>
                                         </div>
+                                        {fieldErrors.password && (
+                                            <p className="text-[10px] text-red-500 flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-xs">error</span>
+                                                {fieldErrors.password}
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Forgot Password */}
@@ -327,9 +360,19 @@ export default function AuthPage() {
                                                 placeholder="e.g. Sunil Perera"
                                                 value={registerForm.name}
                                                 onChange={(e) => setRegisterForm(prev => ({ ...prev, name: e.target.value }))}
-                                                className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
+                                                className={`w-full h-9 pl-9 pr-3 rounded-lg border-2 text-xs focus:outline-none transition-colors ${
+                                                    fieldErrors.name
+                                                        ? "border-red-400 focus:border-red-400"
+                                                        : "border-gray-300 focus:border-primary"
+                                                }`}
                                             />
                                         </div>
+                                        {fieldErrors.name && (
+                                            <p className="text-[10px] text-red-500 flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-xs">error</span>
+                                                {fieldErrors.name}
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Email */}
@@ -342,9 +385,19 @@ export default function AuthPage() {
                                                 placeholder="e.g. person@gmail.com"
                                                 value={registerForm.email}
                                                 onChange={(e) => setRegisterForm(prev => ({ ...prev, email: e.target.value }))}
-                                                className="w-full h-9 pl-9 pr-3 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
+                                                className={`w-full h-9 pl-9 pr-3 rounded-lg border-2 text-xs focus:outline-none transition-colors ${
+                                                    fieldErrors.email
+                                                        ? "border-red-400 focus:border-red-400"
+                                                        : "border-gray-300 focus:border-primary"
+                                                }`}
                                             />
                                         </div>
+                                        {fieldErrors.email && (
+                                            <p className="text-[10px] text-red-500 flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-xs">error</span>
+                                                {fieldErrors.email}
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Password */}
@@ -357,7 +410,11 @@ export default function AuthPage() {
                                                 placeholder="Create a secure password"
                                                 value={registerForm.password}
                                                 onChange={(e) => setRegisterForm(prev => ({ ...prev, password: e.target.value }))}
-                                                className="w-full h-9 pl-9 pr-9 rounded-lg border-2 border-gray-300 text-xs focus:outline-none focus:border-primary"
+                                                className={`w-full h-9 pl-9 pr-9 rounded-lg border-2 text-xs focus:outline-none transition-colors ${
+                                                    fieldErrors.password
+                                                        ? "border-red-400 focus:border-red-400"
+                                                        : "border-gray-300 focus:border-primary"
+                                                }`}
                                             />
                                             <button
                                                 type="button"
@@ -369,6 +426,12 @@ export default function AuthPage() {
                                                 </span>
                                             </button>
                                         </div>
+                                        {fieldErrors.password && (
+                                            <p className="text-[10px] text-red-500 flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-xs">error</span>
+                                                {fieldErrors.password}
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Register Button */}

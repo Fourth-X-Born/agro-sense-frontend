@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AdminLayout from "../../components/admin/AdminLayout";
 import adminService from "../../services/adminService";
+import { validateRequired, validatePositiveNumber, runValidations } from "../../utils/validators";
 
 export default function AdminMarketPricesPage() {
     const [formData, setFormData] = useState({
@@ -16,6 +17,8 @@ export default function AdminMarketPricesPage() {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [formError, setFormError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
 
     useEffect(() => {
         fetchData();
@@ -48,10 +51,16 @@ export default function AdminMarketPricesPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.cropId || !formData.districtId || !formData.price || !formData.date) {
-            alert("Please fill in all fields");
-            return;
-        }
+        setFormError("");
+
+        const { errors, isValid } = runValidations({
+            cropId: validateRequired(formData.cropId, "Crop"),
+            districtId: validateRequired(formData.districtId, "District"),
+            price: validatePositiveNumber(formData.price, "Price per kg"),
+            date: validateRequired(formData.date, "Date"),
+        });
+        setFieldErrors(errors);
+        if (!isValid) return;
 
         try {
             setSubmitting(true);
@@ -62,10 +71,11 @@ export default function AdminMarketPricesPage() {
                 priceDate: formData.date,
             });
             setFormData({ cropId: "", districtId: "", price: "", date: "" });
+            setFieldErrors({});
             fetchData();
         } catch (err) {
             console.error("Error creating market price:", err);
-            alert("Failed to create market price");
+            setFormError("Failed to create market price. Please try again.");
         } finally {
             setSubmitting(false);
         }
@@ -78,7 +88,7 @@ export default function AdminMarketPricesPage() {
             fetchData();
         } catch (err) {
             console.error("Error deleting market price:", err);
-            alert("Failed to delete market price");
+            setError("Failed to delete market price.");
         }
     };
 
@@ -176,6 +186,13 @@ export default function AdminMarketPricesPage() {
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 animate-fade-in-up delay-200">
                     <h3 className="text-base font-bold text-[#131613] mb-5">Add Market Price</h3>
 
+                    {formError && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
+                            <span className="material-symbols-outlined text-base">error</span>
+                            {formError}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-5">
                             <div>
@@ -184,13 +201,20 @@ export default function AdminMarketPricesPage() {
                                     name="cropId"
                                     value={formData.cropId}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                                    className={`w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer ${
+                                        fieldErrors.cropId ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                    }`}
                                 >
                                     <option value="">Select Crop</option>
                                     {crops.map((crop) => (
                                         <option key={crop.id} value={crop.id}>{crop.name}</option>
                                     ))}
                                 </select>
+                                {fieldErrors.cropId && (
+                                    <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-xs">error</span>{fieldErrors.cropId}
+                                    </p>
+                                )}
                             </div>
 
                             <div>
@@ -199,13 +223,20 @@ export default function AdminMarketPricesPage() {
                                     name="districtId"
                                     value={formData.districtId}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all appearance-none cursor-pointer"
+                                    className={`w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all appearance-none cursor-pointer ${
+                                        fieldErrors.districtId ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                    }`}
                                 >
                                     <option value="">Select District</option>
                                     {districts.map((district) => (
                                         <option key={district.id} value={district.id}>{district.name}</option>
                                     ))}
                                 </select>
+                                {fieldErrors.districtId && (
+                                    <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-xs">error</span>{fieldErrors.districtId}
+                                    </p>
+                                )}
                             </div>
 
                             <div>
@@ -218,8 +249,15 @@ export default function AdminMarketPricesPage() {
                                     onChange={handleInputChange}
                                     step="0.01"
                                     min="0"
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                    className={`w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
+                                        fieldErrors.price ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                    }`}
                                 />
+                                {fieldErrors.price && (
+                                    <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-xs">error</span>{fieldErrors.price}
+                                    </p>
+                                )}
                             </div>
 
                             <div>
@@ -229,8 +267,15 @@ export default function AdminMarketPricesPage() {
                                     name="date"
                                     value={formData.date}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                    className={`w-full px-4 py-2.5 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
+                                        fieldErrors.date ? "border-red-400 focus:ring-red-200" : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                    }`}
                                 />
+                                {fieldErrors.date && (
+                                    <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-xs">error</span>{fieldErrors.date}
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -248,6 +293,7 @@ export default function AdminMarketPricesPage() {
                         </button>
                     </form>
                 </div>
+
             </div>
         </AdminLayout>
     );

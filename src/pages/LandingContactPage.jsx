@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import Navbar from "../components/landing/Navbar";
 import Footer from "../components/landing/Footer";
 import api from "../services/api";
+import { validateRequired, validateEmail, validateMessage, runValidations } from "../utils/validators";
 
 // Fix for default marker icons in Leaflet with Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -25,21 +26,37 @@ export default function LandingContactPage() {
     const [submitted, setSubmitted] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        // Clear field error on change
+        if (fieldErrors[name]) {
+            setFieldErrors(prev => ({ ...prev, [name]: "" }));
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError("");
-        
+
+        const { errors, isValid } = runValidations({
+            name: validateRequired(formData.name, "Name", 2),
+            email: validateEmail(formData.email),
+            subject: validateRequired(formData.subject, "Subject", 3),
+            message: validateMessage(formData.message, 10),
+        });
+        setFieldErrors(errors);
+        if (!isValid) return;
+
+        setLoading(true);
         try {
             await api.post("/contact", formData);
             setSubmitted(true);
             setTimeout(() => setSubmitted(false), 5000);
             setFormData({ name: "", email: "", subject: "", message: "" });
+            setFieldErrors({});
         } catch (err) {
             console.error("Error submitting contact form:", err);
             setError(err.response?.data?.message || "Failed to send message. Please try again.");
@@ -219,10 +236,19 @@ export default function LandingContactPage() {
                                                 name="name"
                                                 value={formData.name}
                                                 onChange={handleChange}
-                                                required
                                                 placeholder="Enter your name"
-                                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                                className={`w-full px-3 py-2 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-colors ${
+                                                    fieldErrors.name
+                                                        ? "border-red-400 focus:ring-red-200"
+                                                        : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                                }`}
                                             />
+                                            {fieldErrors.name && (
+                                                <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-xs">error</span>
+                                                    {fieldErrors.name}
+                                                </p>
+                                            )}
                                         </div>
                                         <div>
                                             <label className="text-xs font-medium text-[#131613] block mb-1">Email Address</label>
@@ -231,10 +257,19 @@ export default function LandingContactPage() {
                                                 name="email"
                                                 value={formData.email}
                                                 onChange={handleChange}
-                                                required
                                                 placeholder="your@email.com"
-                                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                                className={`w-full px-3 py-2 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-colors ${
+                                                    fieldErrors.email
+                                                        ? "border-red-400 focus:ring-red-200"
+                                                        : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                                }`}
                                             />
+                                            {fieldErrors.email && (
+                                                <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-xs">error</span>
+                                                    {fieldErrors.email}
+                                                </p>
+                                            )}
                                         </div>
                                         <div>
                                             <label className="text-xs font-medium text-[#131613] block mb-1">Subject</label>
@@ -242,8 +277,11 @@ export default function LandingContactPage() {
                                                 name="subject"
                                                 value={formData.subject}
                                                 onChange={handleChange}
-                                                required
-                                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                                                className={`w-full px-3 py-2 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-colors ${
+                                                    fieldErrors.subject
+                                                        ? "border-red-400 focus:ring-red-200"
+                                                        : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                                }`}
                                             >
                                                 <option value="">Select a topic</option>
                                                 <option value="crop-guidance">Crop Guidance</option>
@@ -254,6 +292,12 @@ export default function LandingContactPage() {
                                                 <option value="technical-support">Technical Support</option>
                                                 <option value="other">Other</option>
                                             </select>
+                                            {fieldErrors.subject && (
+                                                <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-xs">error</span>
+                                                    {fieldErrors.subject}
+                                                </p>
+                                            )}
                                         </div>
                                         <div>
                                             <label className="text-xs font-medium text-[#131613] block mb-1">Message</label>
@@ -261,11 +305,20 @@ export default function LandingContactPage() {
                                                 name="message"
                                                 value={formData.message}
                                                 onChange={handleChange}
-                                                required
                                                 rows={4}
                                                 placeholder="Describe your inquiry..."
-                                                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+                                                className={`w-full px-3 py-2 bg-gray-50 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-colors resize-none ${
+                                                    fieldErrors.message
+                                                        ? "border-red-400 focus:ring-red-200"
+                                                        : "border-gray-200 focus:ring-primary/20 focus:border-primary"
+                                                }`}
                                             />
+                                            {fieldErrors.message && (
+                                                <p className="text-[11px] text-red-500 mt-1 flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-xs">error</span>
+                                                    {fieldErrors.message}
+                                                </p>
+                                            )}
                                         </div>
                                         <button
                                             type="submit"
@@ -285,6 +338,7 @@ export default function LandingContactPage() {
                                             )}
                                         </button>
                                     </form>
+
                                 )}
                             </div>
 

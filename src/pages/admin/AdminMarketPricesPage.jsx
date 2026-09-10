@@ -58,8 +58,8 @@ export default function AdminMarketPricesPage() {
             await adminService.createMarketPrice({
                 cropId: parseInt(formData.cropId),
                 districtId: parseInt(formData.districtId),
-                price: parseFloat(formData.price),
-                date: formData.date,
+                pricePerKg: parseFloat(formData.price),
+                priceDate: formData.date,
             });
             setFormData({ cropId: "", districtId: "", price: "", date: "" });
             fetchData();
